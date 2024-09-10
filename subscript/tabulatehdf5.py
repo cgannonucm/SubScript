@@ -4,7 +4,7 @@ from typing import Callable, Iterable
 import numpy as np
 import time
 from collections import UserDict
-from subscript.parameters import NodePropertyLabel
+from subscript.defaults import plabels
 
 class nodeProperties(UserDict):
     _nodefilter = None
@@ -76,7 +76,7 @@ def tabulate_nodes(gout:h5py.File, key_index:int=-1, custom_dsets:Callable = Non
         _key_index = np.max(get_galacticus_outputs(gout))
     
     outn:h5py.Group = outs[f"Output{_key_index}"]
-    nd:h5py.Group     = outn["nodeData"]
+    nd:h5py.Group   = outn["nodeData"]
 
     # Total number of nodes in output can be obtained by summing this dataset
     # Which contains the number of nodes per tree

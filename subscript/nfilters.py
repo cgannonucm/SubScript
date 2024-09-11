@@ -3,6 +3,7 @@ import numpy as np
 import numpy.testing
 import h5py
 
+from subscript.scripts.spatial import project3d
 from subscript.wrappers import NodeFilterWrapper, nfiltercallwrapper
 from subscript.defaults import ParamKeys
 
@@ -21,8 +22,11 @@ class _nfilter_halos(NodeFilterWrapper):
 
 class _nfilter_range(NodeFilterWrapper):
     @nfiltercallwrapper
-    def __call__(gout, key, min, max, inclmin = True, inclmax = False, **kwargs):
-        val = gout[key]
+    def __call__(gout, min, max, key = None, getval = None, inclmin = True, inclmax = False, **kwargs):
+        if key is not None:
+            val = gout[key]
+        if getval is not None: 
+            val = getval(gout, **kwargs)
         lb = min <= val if inclmin else min < val
         ub = val >= max if inclmin else val > max
         return lb & ub
@@ -37,16 +41,18 @@ class _nfilter_most_massive_progenitor(NodeFilterWrapper):
 
 class _nfilter_select_virialized(NodeFilterWrapper):
     @nfiltercallwrapper
-    def __call__(gout, key_mass_basic=ParamKeys.mass_basic, key_rvir=ParamKeys.key_rvir, **kwargs):
-        fmmp = nfilter_most_massive_progenitor(gout, key_mass_basic=key_mass_basic, **kwargs)
-        rv = gout[key_rvir][fmmp][0] 
+    def __call__(gout, key_rvir=ParamKeys.rvir, inclusive = True, **kwargs):
+        fmmp = nfilter_most_massive_progenitor(gout, **kwargs)
+        rv = gout[key_rvir][fmmp][0]
+        return nfilter_range(gout, min=0, max=rv, inclmin=True, inclmax=inclusive, getval=project3d)
+
 
 nfilter_halos                   =  _nfilter_halos                  ()
 nfilter_subhalos                = ~nfilter_halos
 nfilter_all                     =  _nfilter_all                    ()
 nfilter_range                   =  _nfilter_range                  ()
 nfilter_most_massive_progenitor =  _nfilter_most_massive_progenitor()
-
+nfilter_select_virialized       =  _nfilter_select_virialized      ()
 
 def main():
     from subscript.tabulatehdf5 import tabulate_trees
@@ -62,6 +68,9 @@ def main():
     out_flat = np.asanyarray(out).flatten()
     expected = np.array((1E13, 0.5, 0, 0))
     np.testing.assert_allclose(out_flat, expected)
+
+    # Create test
+    print(nfilter_select_virialized(gout))
 
 if __name__ == "__main__": 
     main()

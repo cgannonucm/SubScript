@@ -18,7 +18,7 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     elif isinstance(gout, Iterable):
         _gout = [NodeProperties(o) for o in gout]
     else:
-        raise RuntimeError("Unrecognized data type for gout")
+        raise RuntimeError(f"Unrecognized data type for gout {type(gout)}")
     return _gout
 
 def gscript(func):

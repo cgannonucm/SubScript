@@ -1,32 +1,62 @@
 #!/usr/bin/env python
 from __future__ import annotations
-from typing import Any, Callable, Iterable, ParamSpec, Concatenate, TypeVar, Generic
-from functools import wraps
+from typing import Any, Callable, Iterable
+from collections import UserDict
 import numpy as np
 import h5py
 
-from subscript.tabulatehdf5 import nodeProperties, tabulate_nodes
+from subscript.tabulatehdf5 import NodeProperties, tabulate_trees
+from subscript import tabulatehdf5
 from subscript import defaults
 
-def nodedata(gout, out_index=-1):
-    if isinstance(gout, nodeProperties):
-        _gout = gout
+def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
+    if isinstance(gout, (dict, UserDict)):
+        _gout = [NodeProperties(gout), ]
     elif isinstance(gout, h5py.File):
         # TODO: Refactor key_index to tree_inxex
-        _gout = tabulate_nodes(gout, key_index=out_index)
-    elif isinstance(gout, dict):
-        _gout = nodeProperties(gout)
+        _gout = tabulate_trees(gout, out_index=out_index)
+    elif isinstance(gout, Iterable):
+        _gout = [NodeProperties(o) for o in gout]
     else:
         raise RuntimeError("Unrecognized data type for gout")
     return _gout
 
-def nfiltercallwrapper(func):
-    def wrap(self, gout:(h5py.File | nodeProperties | dict), *args, out_index=-1, plabels = None, **kwargs):
-        plabels = {} if plabels is None else plabels
-        return func(self, nodedata(gout, out_index=out_index), 
-                        *args, out_index=-1, 
-                        nplabels=(defaults.plabels | plabels),**kwargs)
+def gscript(func):
+    def wrap(gout:(h5py.File | NodeProperties | dict), *args, 
+                nodefilter:(Callable | np.ndarray[bool])=None, summarize:bool=False, statfuncs:Iterable[Callable] = None,
+                out_index:int=-1, **kwargs): 
+        outs = []         
+        trees = format_nodedata(gout, out_index)
+        ntrees = len(trees)
+
+        for nodestree in trees:
+            _nodestree = nodestree.unfilter()
+            _nodefilter = None
+            if nodefilter is not None:
+                _nodefilter = nodefilter(_nodestree, **kwargs)
+            _nodestree_filtered = _nodestree.filter(_nodefilter)
+            o = func(_nodestree_filtered, *args, **kwargs)
+            single_out = isinstance(o, np.ndarray) 
+            _o = [o,] if single_out else o
+            outs.append(_o)
+
+        def format_out(o):
+            _o = [i[0] if len(i) == 1 else i for i in o]
+            return _o[0] if len(_o) == 1 else _o
+
+        if not summarize:
+            return format_out(outs)
+    
+        _statfuncs = [np.mean, ] if statfuncs is None else statfuncs
+
+        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
+        summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs] 
+
+        return format_out(summary)
     return wrap
+
+def nfiltercallwrapper(func):
+    return lambda s, *a, **k: gscript(func)(*a, **k)
 
 class NodeFilterWrapper(): 
     def __init__(self, func = None):
@@ -55,103 +85,18 @@ class NodeFilterWrapper():
 
     __invert__ = logical_not
 
-    def freeze(self, *args, **kwargs):
-        return lambda gout: self(gout, *args, **kwargs)
-
-# This design is chosen to allow for lsps 
-# basically impossible impossible to get 
-# type hints unless we design our function like this
-class _nfilter_all(NodeFilterWrapper):
-    @nfiltercallwrapper
-    def __call__(self, gout, **kwargs):
-        return np.ones(gout[next(iter(gout))].shape, dtype=bool)
-
-nfilter_all = _nfilter_all()
-
-class _nfilter_halos(NodeFilterWrapper):
-    @nfiltercallwrapper
-    def __call__(self, gout, **kwargs):
-        pass
-
-def gscript(func):
-    def wrap(gout:(h5py.File | nodeProperties | dict), *args, 
-                nodefilter=None, treestats=False, treestatfuncs:Iterable[Callable] = None,
-                out_index=-1, tree_index = None, plabels = None,
-                **kwargs): 
-        plabels = {} if plabels is None else plabels
-          
-        _gout = nodedata(gout, out_index)
-
-        trees = np.unique(_gout["custom_node_tree"])
-        if tree_index is not None:
-            trees = (tree_index)
-
-        if nodefilter is None:
-            nodefilter = np.ones(_gout[next(iter(_gout))].shape, dtype=bool)
-
-        if isinstance(nodefilter, np.ndarray):
-            _nodefilter = nodefilter
-        elif isinstance(nodefilter, Callable):
-            _nodefilter = nodefilter(_gout, *args, **kwargs)
-        else:
-            raise RuntimeError("Unrecognized data type for nodefilter")
-          
-        summary = None
-
-        for treen, tree in enumerate(trees):
-            filtertree = _gout["custom_node_tree"] == tree
-            _gout_ftree    = _gout.filter(filtertree)
-            _gout_ftree_nf = _gout.filter(filtertree & _nodefilter)
-    
-            out = func(_gout_ftree_nf, *args, 
-                        nodefilter=_nodefilter, **kwargs, 
-                        gout_ftree=_gout_ftree,
-                        tree_index=tree,
-                        nplabels=(defaults.plabels | plabels))                    
-
-            single_out = isinstance(out, np.ndarray)
-
-            _out = out
-            if single_out:
-                _out = [out, ]
-            
-            if summary is None:
-                summary = []
-                for o in _out:
-                    summary.append([[] for tree in trees])
-
-            for n,o in enumerate(_out):
-                summary[n][treen] = o 
- 
-        format_out = lambda o: o[0] if single_out else o
-
-        if not treestats:
-            return format_out(summary)
-
-        if tree_index is not None:
-            return format_out([out[0] for out in summary])
-
-        _treestatfuncs = (np.mean, ) if treestatfuncs is None else treestatfuncs        
-
-        stat_summary = []
-        for _func in _treestatfuncs:
-            stat_summary.append([])
-            for arr in summary:
-                stat_summary[-1].append(_func(arr, axis=0))
-
-        if single_out:
-            return stat_summary[0]
-        return stat_summary 
-    return wrap
+    def freeze(self, **kwargs):
+        return lambda gout, *a, **k: self(gout, *a, **(k | kwargs))
 
 @gscript
-def nodevalue(gout, label:(str | Iterable[str]), **kwargs):
-    return gout[label]
+def nodedata(gout, key:(str | Iterable[str]), **kwargs):
+    return gout[key]
 
 def main():
     path_dmo = "../data/test.hdf5"
     gout = h5py.File(path_dmo)
-    print(len(nodevalue(gout, defaults.plabels["mass"])))
+    print(nodedata(tabulate_trees(gout)[0], defaults.ParamKeys.mass))
+
 
 if __name__ == "__main__": 
     main()

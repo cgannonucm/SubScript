@@ -86,7 +86,7 @@ class NodeFilterWrapper():
     __invert__ = logical_not
 
     def freeze(self, **kwargs):
-        return lambda gout, *a, **k: self(gout, *a, **(k | kwargs))
+        return NodeFilterWrapper(lambda gout, *a, **k: self(gout, *a, **(k | kwargs)))
 
 @gscript
 def nodedata(gout, key:(str | Iterable[str]), **kwargs):

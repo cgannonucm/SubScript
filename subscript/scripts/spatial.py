@@ -19,8 +19,6 @@ def project2d(gout, norm, key_x=ParamKeys.x, key_y=ParamKeys.y, key_z=ParamKeys.
     rdotun = np.dot(coords, norm / np.linalg.norm(norm))
     return np.sqrt(rdotr**2 - rdotun**2)
 
-
-
 def main():
     path_dmo = "../../data/test.hdf5"
     gout = h5py.File(path_dmo)

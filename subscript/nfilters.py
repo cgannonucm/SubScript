@@ -70,13 +70,12 @@ class _nfilter_subhalos_valid(NodeFilterWrapper):
 class _nfilter_project_3d(NodeFilterWrapper):
     @nfiltercallwrapper
     def __call__(gout, rmin, rmax, **kwargs):
-        return nfilter_range(gout, rmin, rmax, get_val=project3d, **kwargs)
-
+        return nfilter_range(gout, rmin, rmax, getval=project3d, **kwargs)
 
 class _nfilter_project_2d(NodeFilterWrapper):
     @nfiltercallwrapper
     def __call__(gout, rmin, rmax, norm, **kwargs):
-        return nfilter_range(gout, rmin, rmax, get_val=project2d, norm=norm, **kwargs)
+        return nfilter_range(gout, rmin, rmax, getval=project2d, norm=norm, **kwargs)
 
 
 nfilter_halos                   =  _nfilter_halos                  ()

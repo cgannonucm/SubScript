@@ -67,6 +67,18 @@ class _nfilter_subhalos_valid(NodeFilterWrapper):
 
         return a & b & c
 
+class _nfilter_project_3d(NodeFilterWrapper):
+    @nfiltercallwrapper
+    def __call__(gout, rmin, rmax, **kwargs):
+        return nfilter_range(gout, rmin, rmax, get_val=project3d, **kwargs)
+
+
+class _nfilter_project_2d(NodeFilterWrapper):
+    @nfiltercallwrapper
+    def __call__(gout, rmin, rmax, norm, **kwargs):
+        return nfilter_range(gout, rmin, rmax, get_val=project2d, norm=norm, **kwargs)
+
+
 nfilter_halos                   =  _nfilter_halos                  ()
 nfilter_subhalos                = ~nfilter_halos
 nfilter_all                     =  _nfilter_all                    ()
@@ -74,6 +86,8 @@ nfilter_range                   =  _nfilter_range                  ()
 nfilter_most_massive_progenitor =  _nfilter_most_massive_progenitor()
 nfilter_virialized              =  _nfilte_virialized              ()
 nfilter_subhalos_valid          =  _nfilter_subhalos_valid         ()
+nfilter_project_3d              = _nfilter_project_3d              ()
+nfilter_project_2d              = _nfilter_project_2d              ()
 
 def main():
     from subscript.tabulatehdf5 import tabulate_trees
@@ -102,7 +116,7 @@ def main():
     }
     
     # Create test
-    out_rv       = nfilter_select_virialized(mockdata)
+    out_rv       = nfilter_virialized(mockdata)
     out_expected = np.array((True, False, False, True, True)) 
     np.testing.assert_equal(out_rv, out_expected)
 

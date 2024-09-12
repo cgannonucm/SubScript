@@ -4,7 +4,10 @@ from subscript.wrappers import gscript
 from subscript.defaults import ParamKeys
 
 def bin_avg(bins):
-    return (bins[:-1] + bins[1:]) / 2
+    return (bins[1:] + bins[:-1] ) / 2
+
+def bin_size(bins):
+    return (bins[1:] - bins[:-1])
 
 @gscript
 def hist(gout, key_hist=None, getval=None, bins=None, range=None, density=False, weights=None, kwargs_massfunction_hist = None, **kwargs):
@@ -19,7 +22,7 @@ def hist(gout, key_hist=None, getval=None, bins=None, range=None, density=False,
 @gscript
 def massfunction(gout, key_mass=ParamKeys.mass, bins=None, range=None, **kwargs): 
     _hist, _bins = hist(gout, key_hist=key_mass, bins=bins, range=range)
-    return _hist / bin_avg(bins), _bins 
+    return _hist / bin_size(_bins), _bins 
 
 def main():
     import h5py

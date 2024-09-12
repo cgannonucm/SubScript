@@ -56,7 +56,7 @@ def gscript(func):
     return wrap
 
 def nfiltercallwrapper(func):
-    return lambda s, *a, **k: gscript(func)(*a, **k)
+    return lambda s, *a, **k: gscript(func)(*a, **(dict(self=s) | k))
 
 class NodeFilterWrapper(): 
     def __init__(self, func = None):
@@ -64,7 +64,7 @@ class NodeFilterWrapper():
     
     @nfiltercallwrapper
     def __call__(gout, *args, **kwargs)->np.ndarray[bool]:
-        return self.wrap(*args, **kwargs)
+        return kwargs["self"].wrap(gout, *args, **kwargs)
 
     def __and__(self, other:NodeFilterWrapper | Callable | np.ndarray):
         if isinstance(other, Callable):

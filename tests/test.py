@@ -1,4 +1,5 @@
 #!/usr/bin/env python 
+from subscript.parameters import NodePropertyLabels
 
 def main():
     pass

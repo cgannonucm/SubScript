@@ -3,7 +3,7 @@ import numpy as np
 import numpy.testing
 import h5py
 
-from subscript.scripts.spatial import project3d
+from subscript.scripts.spatial import project3d, project2d
 from subscript.wrappers import NodeFilterWrapper, nfiltercallwrapper
 from subscript.defaults import ParamKeys
 

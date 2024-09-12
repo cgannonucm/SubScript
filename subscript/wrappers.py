@@ -56,7 +56,7 @@ def gscript(func):
     return wrap
 
 def nfiltercallwrapper(func):
-    return lambda s, *a, **k: gscript(func)(*a, **(dict(self=s) | k))
+    return lambda s, *a, **k: gscript(func)(*a, **(k | dict(self=s)))
 
 class NodeFilterWrapper(): 
     def __init__(self, func = None):

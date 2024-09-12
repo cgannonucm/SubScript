@@ -16,7 +16,7 @@ def project2d(gout, norm, key_x=ParamKeys.x, key_y=ParamKeys.y, key_z=ParamKeys.
     # Projection equations, just pythagorean theorem
     # r2^2 = (|r|)^2 + (r.un)^2
     rnorm  = np.linalg.norm(coords, axis=0)
-    rdotun = np.dot(coords, norm / np.linalg.norm(norm))
+    rdotun = np.dot(norm / np.linalg.norm(norm), coords)
     return np.sqrt(rdotr**2 - rdotun**2)
 
 def main():

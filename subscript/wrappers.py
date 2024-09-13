@@ -13,6 +13,7 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     if isinstance(gout, (dict, UserDict)):
         _gout = [NodeProperties(gout), ]
     elif isinstance(gout, h5py.File):
+        # TODO: Refactor key_index to tree_inxex
         _gout = tabulate_trees(gout, out_index=out_index)
     elif isinstance(gout, Iterable):
         _gout = [NodeProperties(o) for o in gout]
@@ -93,8 +94,9 @@ def nodedata(gout, key:(str | Iterable[str]), **kwargs):
 
 def main():
     path_dmo = "../data/test.hdf5"
-    gout = tabulate_trees(h5py.File(path_dmo))
-    print(nodedata(gout, defaults.ParamKeys.mass))
+    gout = h5py.File(path_dmo)
+    print(nodedata(tabulate_trees(gout)[0], defaults.ParamKeys.mass))
+
 
 if __name__ == "__main__": 
     main()

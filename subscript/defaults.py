@@ -23,6 +23,3 @@ class ParamKeys():
     custom_id = 'custom_id'
     custom_tree_index = 'custom_node_tree'
     custom_tree_outputorder = 'custom_node_outputorder'
-
-class Meta():
-    enable_higher_order_caching = False

@@ -4,7 +4,7 @@ from typing import Callable, Iterable
 import numpy as np
 import time
 from collections import UserDict
-from subscript.defaults import ParamKeys
+from subscript.defaults import ParamKeys, Meta
 from functools import cache
 from copy import copy
 
@@ -63,6 +63,7 @@ class NodeProperties(UserDict):
     def get_filter(self):
         return self._nodefilter
 
+
     @cache
     def _cached(self, key):
         if self._nodefilter is not None:
@@ -81,6 +82,11 @@ class NodeProperties(UserDict):
         if self._nodefilter is None:
             return out
         return out[self._nodefilter]
+
+    def _get_item(self, key):
+        if Meta.enable_higher_order_caching or self.nodefilter is None:
+            return _cached(key)
+        return self.unfilter()[key][self._nodefilter]
     
     def __getitem__(self, key): 
         # Allow for providing a set of keys
@@ -88,7 +94,7 @@ class NodeProperties(UserDict):
             return [self[_key] for _key in key] 
         
         # Cache based on file name or fall back to id
-        return self._cached(key)
+        return self._get_item(key)
                 
 def get_galacticus_outputs(galout:h5py.File)->np.ndarray[int]:
     output_groups:h5py.Group = galout["Outputs"] 

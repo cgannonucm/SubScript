@@ -119,5 +119,6 @@ def main():
     out_expected = np.array((True, False, False, True, True)) 
     np.testing.assert_equal(out_rv, out_expected)
 
+
 if __name__ == "__main__": 
     main()

@@ -8,15 +8,27 @@ from subscript.defaults import ParamKeys, Meta
 from functools import cache
 from copy import copy
 
+
+# Hacky workaround to get caching working
+@cache
+def _get_custom_cache(h, key):
+    _hash = hash(str(h) + key)
+    return NodeProperties._cache.get(_hash)
+    
+def _set_custom_cache(h, key, val):
+    _hash = hash(str(h) + key)
+    NodeProperties._cache[_hash] = val
+    
 class NodeProperties(UserDict):
     _counter = 0
+    _cache = {}
 
     _nodefilter = None
     _startn = 0
     _stopn = None
     _fname = None
 
-    def __init__(self, d, nodefilter:np.ndarray=None, startn = None, stopn=None, fname=None):
+    def __init__(self, d, nodefilter:np.ndarray=None, startn = None, stopn=None, fpath=None):
         self._nodefilter = nodefilter 
         out = super(NodeProperties,self).__init__()
         self.data = d
@@ -30,17 +42,20 @@ class NodeProperties(UserDict):
                 raise RuntimeError("Changing indexes is unsorported.")
             self._startn = d._startn
             self._stopn = d._stopn 
-            self._fname = d._fname
+            self._fpath = d._fpath
         else:
             self._startn = 0 if startn is None else startn
             self._stopn = None if stopn is None else stopn
-            self._fname = fname
+            self._fpath = fpath
 
-        hashstr = str(fname) + f"-from({self._startn}:{self._stopn})"
-        hashstr += f"-id-{self._counter}" if fname is None else ""
+        hashstr = str(self._fpath) + f"-from({self._startn}:{self._stopn})"
+        hashstr += f"-id-{self._counter}" if self._fpath is None else ""
         hashstr += "-nofilter" if nodefilter is None else f"-filter-bytes-hash" + str(hash(nodefilter.data.tobytes()))
+
+        self._data = self.data
    
         self._hashstr = hashstr
+
         self._hash = hash(hashstr)
 
     def __str__(self):
@@ -54,7 +69,7 @@ class NodeProperties(UserDict):
 
     def unfilter(self):
         if self._nodefilter is not None:
-            return self.data.unfilter()
+            return NodeProperties(self.data.unfilter())
         return NodeProperties(self)
 
     def filter(self, nodefilter):
@@ -63,9 +78,11 @@ class NodeProperties(UserDict):
     def get_filter(self):
         return self._nodefilter
 
-
-    @cache
     def _cached(self, key):
+        _c = _get_custom_cache(self._hash, key)
+        if _c is not None:
+            return _c 
+
         if self._nodefilter is not None:
             val = self.unfilter()[key]
         else:
@@ -79,14 +96,24 @@ class NodeProperties(UserDict):
             out = val()[self._startn:self._stopn]
         else:
             raise RuntimeError("Unrecognized Type") 
-        if self._nodefilter is None:
-            return out
-        return out[self._nodefilter]
 
-    def _get_item(self, key):
-        if Meta.enable_higher_order_caching or self._nodefilter is None:
+        if self._nodefilter is None:
+            _out = out
+        else:
+            _out = out[self._nodefilter]
+
+        _set_custom_cache(self._hash, key, _out)
+
+        return _out
+
+    def _get_item(self, key):    
+        if Meta.enable_higher_order_caching or self._nodefilter is None: 
             return self._cached(key)
-        return self.unfilter()[key][self._nodefilter]
+    
+        v = self.unfilter()[key]
+        if self._nodefilter is not None:
+            return v[self._nodefilter]
+        return v
     
     def __getitem__(self, key): 
         # Allow for providing a set of keys
@@ -159,7 +186,7 @@ def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = Non
     stop = np.cumsum(counts) 
 
     #Carefull! Need copy here to avoid devious bugs
-    return [NodeProperties(copy(props), nodefilter=None, startn=n0, stopn=n1) for n0, n1 in zip(start, stop)]
+    return [NodeProperties(copy(props), nodefilter=None, startn=n0, stopn=n1, fpath=gout.filename) for n0, n1 in zip(start, stop)]
 
 def main():
     path_dmo = "../data/test.hdf5"
@@ -172,6 +199,7 @@ def main():
         total_count += len(tree["basicMass"])
 
     assert(total_count == np.sum(gout["Outputs"]["Output1"]["mergerTreeCount"][:]))    
+
         
 
 if __name__ == "__main__": 

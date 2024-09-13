@@ -85,7 +85,7 @@ class NodeProperties(UserDict):
 
     def _get_item(self, key):
         if Meta.enable_higher_order_caching or self._nodefilter is None:
-            return _cached(key)
+            return self._cached(key)
         return self.unfilter()[key][self._nodefilter]
     
     def __getitem__(self, key): 

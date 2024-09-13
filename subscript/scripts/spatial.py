@@ -17,7 +17,7 @@ def project2d(gout, norm, key_x=ParamKeys.x, key_y=ParamKeys.y, key_z=ParamKeys.
     # r2^2 = (|r|)^2 + (r.un)^2
     rnorm  = np.linalg.norm(coords, axis=0)
     rdotun = np.dot(norm / np.linalg.norm(norm), coords)
-    return np.sqrt(rnorm**2 - rdotun**2)
+    return np.sqrt(rdotr**2 - rdotun**2)
 
 def main():
     path_dmo = "../../data/test.hdf5"

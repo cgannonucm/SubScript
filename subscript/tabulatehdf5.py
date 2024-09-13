@@ -5,17 +5,22 @@ import numpy as np
 import time
 from collections import UserDict
 from subscript.defaults import ParamKeys
+from functools import cache
 from copy import copy
 
 class NodeProperties(UserDict):
+    _counter = 0
+
     _nodefilter = None
     _startn = 0
     _stopn = None
+    _fname = None
 
-    def __init__(self, d, nodefilter=None, startn = None, stopn=None):
+    def __init__(self, d, nodefilter:np.ndarray=None, startn = None, stopn=None, fname=None):
         self._nodefilter = nodefilter 
         out = super(NodeProperties,self).__init__()
         self.data = d
+        NodeProperties._counter += 1
 
         if not isinstance(d,(dict, UserDict)):
             raise RuntimeError(f"d must be a dictionary! Not type {type(d)}")
@@ -24,16 +29,28 @@ class NodeProperties(UserDict):
             if startn is not None or stopn is not None:
                 raise RuntimeError("Changing indexes is unsorported.")
             self._startn = d._startn
-            self._stopn = d._stopn
+            self._stopn = d._stopn 
+            self._fname = d._fname
         else:
             self._startn = 0 if startn is None else startn
             self._stopn = None if stopn is None else stopn
+            self._fname = fname
+
+        hashstr = str(fname) + f"-from({self._startn}:{self._stopn})"
+        hashstr += f"-id-{self._counter}" if fname is None else ""
+        hashstr += "-nofilter" if nodefilter is None else f"-filter-bytes-hash" + str(hash(nodefilter.data.tobytes()))
+   
+        self._hashstr = hashstr
+        self._hash = hash(hashstr)
 
     def __str__(self):
         return f"NodeData object"
 
     def __repr__(self):
         return f"NodeData object"
+
+    def __hash__(self):
+        return self._hash
 
     def unfilter(self):
         if self._nodefilter is not None:
@@ -46,28 +63,32 @@ class NodeProperties(UserDict):
     def get_filter(self):
         return self._nodefilter
 
+    @cache
+    def _cached(self, key):
+        if self._nodefilter is not None:
+            val = self.unfilter()[key]
+        else:
+            val = self.data[key]
+
+        if isinstance(val, np.ndarray): 
+            out = val
+        elif isinstance(val, h5py.Dataset):
+            out = val[self._startn:self._stopn]
+        elif isinstance(val, Callable):
+            out = val()[self._startn:self._stopn]
+        else:
+            raise RuntimeError("Unrecognized Type") 
+        if self._nodefilter is None:
+            return out
+        return out[self._nodefilter]
+    
     def __getitem__(self, key): 
         # Allow for providing a set of keys
         if not isinstance(key, str):
             return [self[_key] for _key in key] 
-
-        val = self.data[key]
-        if isinstance(val, np.ndarray): 
-            out = val
-        elif isinstance(val, h5py.Dataset):
-            _val = val[self._startn:self._stopn]
-            self.data[key] = _val
-            out = _val
-        elif isinstance(val, Callable):
-            _val = val()[self._startn:self._stopn]
-            self.data[key] = _val
-            out = _val
-        else:
-            raise RuntimeError("Unrecognized Type") 
-
-        if self._nodefilter is None:
-            return out
-        return out[self._nodefilter] 
+        
+        # Cache based on file name or fall back to id
+        return self._cached(key)
                 
 def get_galacticus_outputs(galout:h5py.File)->np.ndarray[int]:
     output_groups:h5py.Group = galout["Outputs"] 
@@ -137,13 +158,15 @@ def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = Non
 def main():
     path_dmo = "../data/test.hdf5"
     gout = h5py.File(path_dmo)
+
     trees = tabulate_trees(gout)
-    
+
     total_count = 0
     for tree in trees: 
         total_count += len(tree["basicMass"])
 
     assert(total_count == np.sum(gout["Outputs"]["Output1"]["mergerTreeCount"][:]))    
+        
 
 if __name__ == "__main__": 
     main()

@@ -13,7 +13,6 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     if isinstance(gout, (dict, UserDict)):
         _gout = [NodeProperties(gout), ]
     elif isinstance(gout, h5py.File):
-        # TODO: Refactor key_index to tree_inxex
         _gout = tabulate_trees(gout, out_index=out_index)
     elif isinstance(gout, Iterable):
         _gout = [NodeProperties(o) for o in gout]
@@ -40,9 +39,13 @@ def gscript(func):
             _o = [o,] if single_out else o
             outs.append(_o)
 
+        # Eliminate lists of 1 item recursively
         def format_out(o):
-            _o = [i[0] if len(i) == 1 else i for i in o]
-            return _o[0] if len(_o) == 1 else _o
+            if (not isinstance(o, Iterable)) or (isinstance(o, str)):
+                return o
+            if len(o) == 1:
+                return format_out(o[0])
+            return [format_out(i) for i in o]         
 
         if not summarize:
             return format_out(outs)
@@ -88,15 +91,6 @@ class NodeFilterWrapper():
     def freeze(self, **kwargs):
         return NodeFilterWrapper(lambda gout, *a, **k: self(gout, *a, **(k | kwargs)))
 
-@gscript
-def nodedata(gout, key:(str | Iterable[str]), **kwargs):
-    return gout[key]
+def freeze(func, **kwargs):
+    return lambda gout, *a, **k: func(gout, *a, **(k | kwargs))
 
-def main():
-    path_dmo = "../data/test.hdf5"
-    gout = h5py.File(path_dmo)
-    print(nodedata(tabulate_trees(gout)[0], defaults.ParamKeys.mass))
-
-
-if __name__ == "__main__": 
-    main()

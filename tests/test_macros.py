@@ -11,8 +11,8 @@ from subscript.nfilters import nfilter_halos
 from subscript.macros import macro_run, macro_write_out_hdf5
 
 def test_macro_run():
-    path_dmo = "data/test.hdf5"
-    path_dmo2 = "data/test-copy.hdf5"
+    path_dmo = "tests/data/test.hdf5"
+    path_dmo2 = "tests/data/test-copy.hdf5"
     gout = h5py.File(path_dmo)
     gout2 = h5py.File(path_dmo2)
     
@@ -37,8 +37,8 @@ def test_macro_run():
         testing.assert_allclose(vale, out_actual[key])
 
 def test_macro_out_hdf5():
-    path_dmo = "data/test.hdf5"
-    path_dmo2 = "data/test-copy.hdf5"
+    path_dmo = "tests/data/test.hdf5"
+    path_dmo2 = "tests/data/test-copy.hdf5"
     gout = h5py.File(path_dmo)
     gout2 = h5py.File(path_dmo2)
     

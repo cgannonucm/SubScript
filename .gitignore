@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 
 *.hdf5
+test/out
+test/data

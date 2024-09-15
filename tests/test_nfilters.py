@@ -4,7 +4,6 @@ from numpy import testing
 
 from subscript.nfilters import nfilter_virialized
 from subscript.defaults import  ParamKeys
-
 def test_nfilter_virialized():
     # Test selecting halos within virial radius
     mockdata = {

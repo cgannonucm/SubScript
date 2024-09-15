@@ -4,7 +4,7 @@ import numpy as np
 from subscript.tabulatehdf5 import tabulate_trees
 
 def test_tabulate():
-    path_dmo = "data/test.hdf5"
+    path_dmo = "tests/data/test.hdf5"
     gout = h5py.File(path_dmo)
     trees = tabulate_trees(gout)
     

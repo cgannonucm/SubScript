@@ -3,7 +3,7 @@ import numpy as np
 import numpy.testing
 import h5py
 
-from subscript.wrappers import gscript, NodeFilterWrapper, nfiltercallwrapper
+from subscript.wrappers import gscript
 from subscript.defaults import ParamKeys
 
 @gscript

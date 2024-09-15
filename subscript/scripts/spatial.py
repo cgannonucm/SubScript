@@ -18,12 +18,3 @@ def project2d(gout, norm, key_x=ParamKeys.x, key_y=ParamKeys.y, key_z=ParamKeys.
     rnorm  = np.linalg.norm(coords, axis=0)
     rdotun = np.dot(norm / np.linalg.norm(norm), coords)
     return np.sqrt(rnorm**2 - rdotun**2)
-
-def main():
-    path_dmo = "../../data/test.hdf5"
-    gout = h5py.File(path_dmo)
-
-    print(project3d(gout))
-
-if __name__ == "__main__":
-    main()

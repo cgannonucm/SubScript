@@ -45,7 +45,10 @@ def gscript(func):
                 return o
             if len(o) == 1:
                 return format_out(o[0])
-            return [format_out(i) for i in o]         
+            out = [format_out(i) for i in o]         
+            if isinstance(o, np.ndarray):
+                return np.asarray(out)
+            return out
 
         if not summarize:
             return format_out(outs)

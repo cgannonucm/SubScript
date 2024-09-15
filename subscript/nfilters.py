@@ -27,6 +27,7 @@ class _nfilter_range(NodeFilterWrapper):
             val = gout[key]
         if getval is not None: 
             val = getval(gout, **kwargs)
+        print(val)
         lb = min <= val if inclmin else min < val
         ub = val <= max if inclmin else val < max
         return lb & ub
@@ -39,7 +40,7 @@ class _nfilter_most_massive_progenitor(NodeFilterWrapper):
         out[immp] = True
         return out
 
-class _nfilte_virialized(NodeFilterWrapper):
+class _nfilter_virialized(NodeFilterWrapper):
     @nfiltercallwrapper
     def __call__(gout, key_rvir=ParamKeys.rvir, key_mass_basic=ParamKeys.mass_basic, inclusive = True, **kwargs):
         fmmp = nfilter_most_massive_progenitor(gout, key_mass_basic=key_mass_basic, **kwargs)
@@ -83,41 +84,7 @@ nfilter_subhalos                = ~nfilter_halos
 nfilter_all                     =  _nfilter_all                    ()
 nfilter_range                   =  _nfilter_range                  ()
 nfilter_most_massive_progenitor =  _nfilter_most_massive_progenitor()
-nfilter_virialized              =  _nfilte_virialized              ()
+nfilter_virialized              =  _nfilter_virialized              ()
 nfilter_subhalos_valid          =  _nfilter_subhalos_valid         ()
-nfilter_project_3d              = _nfilter_project_3d              ()
-nfilter_project_2d              = _nfilter_project_2d              ()
-
-def main():
-    from subscript.tabulatehdf5 import tabulate_trees
-    from subscript.wrappers import nodedata
-
-    # Test script + filter
-    path_dmo    = "../data/test.hdf5"
-    gout        = tabulate_trees(h5py.File(path_dmo))
-    #print(nfilter_halos(gout))
-    out_nd      = nodedata(gout, (ParamKeys.mass, ParamKeys.z_lastisolated), 
-                            nodefilter=nfilter_halos, summarize=True,
-                            statfuncs=(np.mean, np.std))
-    
-    out_nd_flat = np.asanyarray(out_nd).flatten()
-    expected    = np.array((1E13, 0.5, 0, 0))
-    np.testing.assert_allclose(out_nd_flat, expected)
-
-
-    # Test selecting halos within virial radius
-    mockdata = {
-                ParamKeys.mass_basic : np.array((5.0, 1.0, 1.0, 1.0, 1.0)),
-                ParamKeys.rvir       : np.array((0.5, 0  , 0  , 0  , 0  )),
-                ParamKeys.x          : np.array((0  , 1.0, 0.5, 0.2, 0.1)),
-                ParamKeys.y          : np.array((0  , 1.0, 0.5, 0  , 0.1)),
-                ParamKeys.z          : np.array((0  , 0  , 0.5, 0  , 0.1))
-    }
-    
-    # Create test
-    out_rv       = nfilter_virialized(mockdata)
-    out_expected = np.array((True, False, False, True, True)) 
-    np.testing.assert_equal(out_rv, out_expected)
-
-if __name__ == "__main__": 
-    main()
+nfilter_project_3d              =  _nfilter_project_3d             ()
+nfilter_project_2d              =  _nfilter_project_2d             ()

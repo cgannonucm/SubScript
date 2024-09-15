@@ -11,6 +11,30 @@ from subscript.defaults import ParamKeys
 # This design is chosen to allow for lsps 
 # basically impossible impossible to get 
 # type hints unless we design our function like this
+def nfor(arg1:(np.ndarray[bool] | Callable), arg2:(np.ndarray[bool] | Callable)):
+    _a1 = arg1
+    if isinstance(arg1, np.ndarray):
+        _a1 = lambda *a, **k: arg1
+    _a2 = arg2
+    if isinstance(arg2, np.ndarray):
+        _a2 = lambda *a, **k: arg2
+    return lambda *a, **k: _a1(*a, **k) | _a2(*a, **k)
+
+def nfand(arg1:(np.ndarray[bool] | Callable), arg2:(np.ndarray[bool] | Callable)):
+    _a1 = arg1
+    if isinstance(arg1, np.ndarray):
+        _a1 = lambda *a, **k: arg1
+    _a2 = arg2
+    if isinstance(arg2, np.ndarray):
+        _a2 = lambda *a, **k: arg2
+    return lambda *a, **k: _a1(*a, **k) & _a2(*a, **k)
+
+def nfnot(arg:(np.ndarray[bool] | Callable)):
+    _a1 = arg
+    if isinstance(arg, np.ndarray):
+        _a1 = lambda *a, **k: arg
+    return lambda *a, **k: np.logical_not(_a1(*a, **k)) 
+
 @gscript
 def nfilter_all(gout, **kwargs):
     return np.ones(gout[next(iter(gout))].shape, dtype=bool)
@@ -18,6 +42,10 @@ def nfilter_all(gout, **kwargs):
 @gscript
 def nfilter_halos(gout, key_is_isolated=ParamKeys.is_isolated, **kwargs):
     return (gout[key_is_isolated] == 1)
+
+@gscript
+def nfilter_subhalos(gout, key_is_isolated=ParamKeys.is_isolated, **kwargs):
+    return (gout[key_is_isolated] == 0)
 
 @gscript
 def nfilter_range(gout, min, max, key = None, getval = None, inclmin = True, inclmax = False, **kwargs):
@@ -65,30 +93,8 @@ def _nfilter_subhalos_valid(gout, mass_min, mass_max, key_mass=ParamKeys.mass,
 @gscript
 def nfilter_project_3d(gout, rmin, rmax, **kwargs):
     return nfilter_range(gout, rmin, rmax, getval=project3d, **kwargs)
+
 @gscript
 def nfilter_project_2d(gout, rmin, rmax, norm, **kwargs):
     return nfilter_range(gout, rmin, rmax, getval=project2d, norm=norm, **kwargs)
 
-def nfor(arg1:(np.ndarray[bool] | Callable), arg2:(np.ndarray[bool] | Callable)):
-    _a1 = arg1
-    if isinstance(arg1, np.ndarray):
-        _a1 = lambda *a, **k: arg1
-    _a2 = arg2
-    if isinstance(arg2, np.ndarray):
-        _a2 = lambda *a, **k: arg2
-    return lambda *a, **k: _a1(*a, **k) | _a2(*a, **k)
-
-def nfand(arg1:(np.ndarray[bool] | Callable), arg2:(np.ndarray[bool] | Callable)):
-    _a1 = arg1
-    if isinstance(arg1, np.ndarray):
-        _a1 = lambda *a, **k: arg1
-    _a2 = arg2
-    if isinstance(arg2, np.ndarray):
-        _a2 = lambda *a, **k: arg2
-    return lambda *a, **k: _a1(*a, **k) & _a2(*a, **k)
-
-def nfnot(arg:(np.ndarray[bool] | Callable)):
-    _a1 = arg
-    if isinstance(arg, np.ndarray):
-        _a1 = lambda *a, **k: arg
-    return lambda *a, **k: np.logical_not(arg(*a, **k)) 

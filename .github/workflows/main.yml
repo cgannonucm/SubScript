@@ -29,7 +29,7 @@ jobs:
       - name: Get testing data
         run: git clone https://github.com/cgannonucm/Galacticus-Data
       - name: Copy testing data
-        run: cp Galacticus-Data/subscript-test test/data
+        run: cp -r Galacticus-Data/subscript-test test/data
       - name: Run pytest
         run: pytest
     

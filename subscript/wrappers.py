@@ -22,7 +22,7 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
 
 def gscript(func):
     def wrap(gout:(h5py.File | NodeProperties | dict), *args, 
-                nodefilter:(Callable | np.ndarray[bool])=None, summarize:bool=False, statfuncs:Iterable[Callable] = None,
+                nfilter:(Callable | np.ndarray[bool])=None, summarize:bool=False, statfuncs:Iterable[Callable] = None,
                 out_index:int=-1, **kwargs): 
         outs = []         
         trees = format_nodedata(gout, out_index)
@@ -31,8 +31,8 @@ def gscript(func):
         for nodestree in trees:
             _nodestree = nodestree.unfilter()
             _nodefilter = None
-            if nodefilter is not None:
-                _nodefilter = nodefilter(_nodestree, **kwargs)
+            if nfilter is not None:
+                _nodefilter = nfilter(_nodestree, **kwargs)
             _nodestree_filtered = _nodestree.filter(_nodefilter)
             o = func(_nodestree_filtered, *args, **kwargs)
             single_out = isinstance(o, np.ndarray) 

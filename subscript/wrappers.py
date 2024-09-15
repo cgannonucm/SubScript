@@ -22,7 +22,7 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
 
 def gscript(func):
     def wrap(gout:(h5py.File | NodeProperties | dict), *args, 
-                nodefilter:(Callable | np.ndarray[bool])=None, summarize:bool=False, statfuncs:Iterable[Callable] = None,
+                nfilter:(Callable | np.ndarray[bool])=None, summarize:bool=False, statfuncs:Iterable[Callable] = None,
                 out_index:int=-1, **kwargs): 
         outs = []         
         trees = format_nodedata(gout, out_index)
@@ -31,8 +31,8 @@ def gscript(func):
         for nodestree in trees:
             _nodestree = nodestree.unfilter()
             _nodefilter = None
-            if nodefilter is not None:
-                _nodefilter = nodefilter(_nodestree, **kwargs)
+            if nfilter is not None:
+                _nodefilter = nfilter(_nodestree, **kwargs)
             _nodestree_filtered = _nodestree.filter(_nodefilter)
             o = func(_nodestree_filtered, *args, **kwargs)
             single_out = isinstance(o, np.ndarray) 
@@ -60,39 +60,6 @@ def gscript(func):
 
         return format_out(summary)
     return wrap
-
-def nfiltercallwrapper(func):
-    return lambda s, *a, **k: gscript(func)(*a, **(k | dict(self=s)))
-
-class NodeFilterWrapper(): 
-    def __init__(self, func = None):
-        self.wrap = func
-    
-    @nfiltercallwrapper
-    def __call__(gout, *args, **kwargs)->np.ndarray[bool]:
-        return kwargs["self"].wrap(gout, *args, **kwargs)
-
-    def __and__(self, other:NodeFilterWrapper | Callable | np.ndarray):
-        if isinstance(other, Callable):
-            return NodeFilterWrapper(lambda *a, **k: self(*a,**k) & other(*a, **k))
-        if isinstance(other, np.ndarray):
-            return NodeFilterWrapper(lambda *a, **k: self(*a,**k) & other)
-        raise RuntimeError("Invalid __and__ operation") 
-    
-    def __or__(self, other:(NodeFilterWrapper | np.ndarray)):
-        if isinstance(other, Callable):
-            return NodeFilterWrapper(lambda *a, **k: self(*a,**k) | other(*a, **k))
-        if isinstance(other, np.ndarray):
-            return NodeFilterWrapper(lambda *a, **k: self(*a,**k) | other)
-        raise RuntimeError("Invalid __or__ operation")
-    
-    def logical_not(self):
-        return NodeFilterWrapper(lambda *a, **k: np.logical_not(self(*a,**k)))
-
-    __invert__ = logical_not
-
-    def freeze(self, **kwargs):
-        return NodeFilterWrapper(lambda gout, *a, **k: self(gout, *a, **(k | kwargs)))
 
 def freeze(func, **kwargs):
     return lambda gout, *a, **k: func(gout, *a, **(k | kwargs))

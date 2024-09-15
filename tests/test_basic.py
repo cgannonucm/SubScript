@@ -14,7 +14,7 @@ def test_nfilter_virialized():
     gout        = tabulate_trees(h5py.File(path_dmo))
     #print(nfilter_halos(gout))
     out_nd      = nodedata(gout, (ParamKeys.mass, ParamKeys.z_lastisolated), 
-                            nodefilter=nfilter_halos, summarize=True,
+                            nfilter=nfilter_halos, summarize=True,
                             statfuncs=(np.mean, np.std))
     
     out_nd_flat = np.asanyarray(out_nd).flatten()

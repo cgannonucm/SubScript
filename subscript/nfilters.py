@@ -97,4 +97,3 @@ def nfilter_project_3d(gout, rmin, rmax, **kwargs):
 @gscript
 def nfilter_project_2d(gout, rmin, rmax, norm, **kwargs):
     return nfilter_range(gout, rmin, rmax, getval=project2d, norm=norm, **kwargs)
-

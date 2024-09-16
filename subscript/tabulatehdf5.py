@@ -44,7 +44,9 @@ class NodeProperties(UserDict):
         return NodeProperties(self,nodefilter)
 
     def get_filter(self):
-        return self._nodefilter
+        if self._nodefilter is not None:
+            return self._nodefilter
+        return np.ones(self.data[next(self.data.__iter__())].shape[0], dtype=bool)
 
     def __getitem__(self, key): 
         # Allow for providing a set of keys
@@ -133,17 +135,3 @@ def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = Non
 
     #Carefull! Need copy here to avoid devious bugs
     return [NodeProperties(copy(props), nodefilter=None, startn=n0, stopn=n1) for n0, n1 in zip(start, stop)]
-
-def main():
-    path_dmo = "../data/test.hdf5"
-    gout = h5py.File(path_dmo)
-    trees = tabulate_trees(gout)
-    
-    total_count = 0
-    for tree in trees: 
-        total_count += len(tree["basicMass"])
-
-    assert(total_count == np.sum(gout["Outputs"]["Output1"]["mergerTreeCount"][:]))    
-
-if __name__ == "__main__": 
-    main()

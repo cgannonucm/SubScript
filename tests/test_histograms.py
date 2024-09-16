@@ -63,7 +63,7 @@ def test_2d_dn():
     testing.assert_allclose(dn_xz, out_expected_xz)
     testing.assert_allclose(dn_yz, out_expected_yz)
 
-def test_3d_dn():
+def test_3d_dndv():
     n = 10000
     test_x = np.linspace(0.1, 1.5, n - 1)
     test_y = np.zeros(n -1)
@@ -87,7 +87,7 @@ def test_3d_dn():
 
     testing.assert_allclose(dndv, out_expected, rtol=1E-3)
 
-def test_3d_dn():
+def test_2d_dnda():
     n = 10000
     test_x = np.zeros(n - 1)
     test_y = np.linspace(0.1, 1.5, n - 1)

@@ -5,7 +5,7 @@ import h5py
 
 
 from subscript.wrappers import freeze
-from subscript.scripts.basic import nodedata
+from subscript.scripts.nodes import nodedata
 from subscript.defaults import ParamKeys
 from subscript.nfilters import nfilter_halos
 from subscript.macros import macro_run, macro_write_out_hdf5

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
-from subscript.wrappers import gscript
+from subscript.wrappers import gscript, gscript_proj
 from subscript.defaults import ParamKeys
 from subscript.scripts.spatial import project3d, project2d
 
@@ -36,12 +36,12 @@ def spatial3d_dndv(gout, bins=None, range=None, kwargs_hist = None, **kwargs):
     dv = 4 / 3 * np.pi * (dn_r[1:]**3 - dn_r[:-1]**3)
     return dn / dv, dn_r
 
-@gscript
+@gscript_proj
 def spatial2d_dn(gout, normvector, bins=None, range=None, kwargs_hist = None, **kwargs):
     r = project2d(gout,normvector=normvector, **kwargs) 
     return np.histogram(r, bins=bins, range=range)
 
-@gscript
+@gscript_proj
 def spatial2d_dnda(gout, normvector, bins=None, range=None, kwargs_hist = None, **kwargs):
     dn, dn_r = spatial2d_dn(gout, normvector, bins=bins, range=range, kwargs_hist = kwargs_hist, **kwargs)
     da = np.pi * (dn_r[1:]**2 - dn_r[:-1]**2)

@@ -3,14 +3,14 @@ import numpy as np
 import numpy.testing
 import h5py
 
-from subscript.wrappers import gscript
+from subscript.wrappers import gscript, gscript_proj
 from subscript.defaults import ParamKeys
 
 @gscript
 def project3d(gout, key_x=ParamKeys.x, key_y=ParamKeys.y, key_z=ParamKeys.z, **kwargs):
     return np.linalg.norm(np.asarray((gout[key_x], gout[key_y], gout[key_z])), axis=0)
 
-@gscript
+@gscript_proj
 def project2d(gout, normvector, key_x=ParamKeys.x, key_y=ParamKeys.y, key_z=ParamKeys.z, **kwargs):
     coords = np.asarray((gout[key_x], gout[key_y], gout[key_z]))
     # Projection equations, just pythagorean theorem

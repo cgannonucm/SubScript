@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from __future__ import annotations
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, List
 from collections import UserDict
+from functools import reduce
 import numpy as np
 import h5py
 
@@ -9,13 +10,24 @@ from subscript.tabulatehdf5 import NodeProperties, tabulate_trees
 from subscript import tabulatehdf5
 from subscript import defaults
 
+def reduce_input(l, out=None):
+    if out is None:
+        out = []
+    
+    for i in l:
+        if isinstance(i, (dict, UserDict)):
+            out.append(i)
+            continue
+        reduce_input(i, out)
+    return out
+            
 def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     if isinstance(gout, (dict, UserDict)):
         _gout = [NodeProperties(gout), ]
     elif isinstance(gout, h5py.File):
         _gout = tabulate_trees(gout, out_index=out_index)
-    elif isinstance(gout, Iterable):
-        _gout = [NodeProperties(o) for o in gout]
+    elif isinstance(gout, Iterable): 
+        _gout = reduce_input([format_nodedata(o, out_index=out_index) for o in gout])
     else:
         raise RuntimeError(f"Unrecognized data type for gout {type(gout)}")
     return _gout
@@ -61,6 +73,33 @@ def gscript(func):
         return format_out(summary)
     return wrap
 
+def gscript_proj(func):
+    """
+    Wraper for scripts that involve projection, allows  passing of multiple normal vectors.
+    If multiple projection vectors are passed, they are treated as seperate "trees".
+    """
+    def wrap(gout, normvector, *args, **kwargs):
+        n = None
+
+        @gscript
+        def wrap_inner(gout, *args, normvector, **kwargs):
+            nonlocal n
+            v =  normvector
+            if n is not None:
+                v = normvector[n]
+                n += 1  
+
+            return func(gout, *args, normvector=v, **kwargs)
+
+        if isinstance(normvector, np.ndarray) and normvector.ndim == 1: 
+            return wrap_inner(gout, *args, normvector=normvector, **kwargs)
+
+        n = 0
+        return wrap_inner([gout for _ in normvector], *args, normvector=normvector, **kwargs)
+
+    return wrap
+
 def freeze(func, **kwargs):
     return lambda gout, *a, **k: func(gout, *a, **(k | kwargs))
+
 

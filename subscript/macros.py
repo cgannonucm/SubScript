@@ -63,7 +63,3 @@ def macro_write_out_hdf5(f:h5py.File, macro_out, notes=None, stamp_date = True):
     now = datetime.now()
     f.attrs["date"] = now.strftime("%m/%d/%Y, %H:%M:%S")
     f.attrs["notes"] = str(notes)
-
-
-if __name__ == "__main__":
-    main()

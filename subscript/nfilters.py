@@ -71,7 +71,7 @@ def nfilter_virialized(gout, key_rvir=ParamKeys.rvir, key_mass_basic=ParamKeys.m
     return nfilter_range(gout, min=0, max=rv, inclmin=True, inclmax=inclusive, getval=project3d)
 
 @gscript
-def _nfilter_subhalos_valid(gout, mass_min, mass_max, key_mass=ParamKeys.mass, 
+def nfilter_subhalos_valid(gout, mass_min, mass_max, key_mass=ParamKeys.mass, 
                             kwargs_nfilter_subhalos = None, kwargs_nfilter_virialized=None, kwargs_nfilter_range=None, 
                             **kwargs):
     """

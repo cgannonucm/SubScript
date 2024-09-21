@@ -20,7 +20,7 @@ def reduce_input(l, out=None):
             continue
         reduce_input(i, out)
     return out
-            
+ 
 def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     if isinstance(gout, (dict, UserDict)):
         _gout = [NodeProperties(gout), ]

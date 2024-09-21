@@ -3,7 +3,7 @@ import numpy as np
 from numpy import testing
 
 from subscript.defaults import ParamKeys
-from subscript.scripts.histograms import spatial3d_dn, spatial3d_dndv, spatial2d_dn, spatial2d_dnda
+from subscript.scripts.histograms import spatial3d_dn, spatial3d_dndv, spatial2d_dn, spatial2d_dnda, massfunction
 
 
 def test_3d_dn():
@@ -110,6 +110,17 @@ def test_2d_dnda():
     out_expected = hist_expected / da
 
     testing.assert_allclose(dndv, out_expected, rtol=1E-3)
+
+def test_massfunction():
+    mockdata = {
+                    ParamKeys.mass_basic: np.array((1,1,1,1,3)) 
+    }
+    bins = np.linspace(0,4,3)
+    mf_actual, mf_actual_bins = massfunction(mockdata, key_mass=ParamKeys.mass_basic, bins=bins)    
+    mf_expected = np.array((4 / 2, 1 / 2))
+    
+    testing.assert_allclose(mf_actual_bins, bins)
+    testing.assert_allclose(mf_actual, mf_expected)
 
 
 

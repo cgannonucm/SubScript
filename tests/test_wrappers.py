@@ -5,7 +5,9 @@ from numpy import testing
 
 from subscript.defaults import ParamKeys
 from subscript.scripts.histograms import  spatial2d_dn
-from subscript.scripts.nodes import nodedata
+from subscript.scripts.nodes import nodedata, nodecount
+from subscript.wrappers import freeze, gscript_proj, multiproj
+from subscript.scripts.nfilters import nfilter_project2d
 
 def test_tabulate_multi_files():
     # Test the ability to tabulate multiple files
@@ -51,3 +53,66 @@ def test_multi_proj():
 
     testing.assert_allclose(dn_r, bins)
     testing.assert_allclose(out_actual, out_expected) 
+
+
+def test_gscript_proj_wrap():
+    test_x       = np.asarray((0.0, 0.25, 0.5       , 0.7       , 0.8        , 1.3, 1.4))
+    test_y       = np.asarray((0.0, 0.00, 0.5       , 0.3       , 0.9        , 0.0, 0.0))
+    test_z       = np.asarray((0.0, 0.00, 0.5       , 0.4       , 0.1        , 0.0, 0.0))
+
+    mockdata = {
+                    ParamKeys.x: test_x,
+                    ParamKeys.y: test_y,
+                    ParamKeys.z: test_z
+    }
+
+    r_xy_expected = np.asarray((0.0, 0.25, 0.70710678, 0.76157731, 1.20415946, 1.3, 1.4))
+    r_xz_expected = np.asarray((0.0, 0.25, 0.70710678, 0.80622577, 0.80622577, 1.3, 1.4))
+    r_yz_expected = np.asarray((0.0, 0.00, 0.70710678, 0.5       , 0.90553851, 0.0, 0.0))
+
+    rmin, rmax = 0.2, 0.71
+    normvectors = np.identity(3)
+
+    n_expected = (
+                   np.sum((r_xy_expected >= rmin) & (r_xy_expected <= rmax))
+                  +np.sum((r_xz_expected >= rmin) & (r_xz_expected <= rmax))
+                  +np.sum((r_yz_expected >= rmin) & (r_yz_expected <= rmax))
+                ) / 3
+
+    nfproj   = freeze(nfilter_project2d, rmin=rmin, rmax=rmax)
+ 
+    n_actual = gscript_proj(freeze(nodecount, nfilter=nfproj))(mockdata, summarize=True, normvector=normvectors)
+
+    testing.assert_allclose(n_actual, n_expected)
+
+def test_multiproj():
+    test_x       = np.asarray((0.0, 0.25, 0.5       , 0.7       , 0.8        , 1.3, 1.4))
+    test_y       = np.asarray((0.0, 0.00, 0.5       , 0.3       , 0.9        , 0.0, 0.0))
+    test_z       = np.asarray((0.0, 0.00, 0.5       , 0.4       , 0.1        , 0.0, 0.0))
+
+    mockdata = {
+                    ParamKeys.x: test_x,
+                    ParamKeys.y: test_y,
+                    ParamKeys.z: test_z
+    }
+
+    r_xy_expected = np.asarray((0.0, 0.25, 0.70710678, 0.76157731, 1.20415946, 1.3, 1.4))
+    r_xz_expected = np.asarray((0.0, 0.25, 0.70710678, 0.80622577, 0.80622577, 1.3, 1.4))
+    r_yz_expected = np.asarray((0.0, 0.00, 0.70710678, 0.5       , 0.90553851, 0.0, 0.0))
+
+    rmin, rmax = 0.2, 0.71
+    normvectors = np.identity(3)
+
+    n_expected = (
+                   np.sum((r_xy_expected >= rmin) & (r_xy_expected <= rmax))
+                  +np.sum((r_xz_expected >= rmin) & (r_xz_expected <= rmax))
+                  +np.sum((r_yz_expected >= rmin) & (r_yz_expected <= rmax))
+                ) / 3
+
+    nfproj   = freeze(nfilter_project2d, rmin=rmin, rmax=rmax)
+ 
+    n_actual = multiproj(nodecount, nfilter=nfproj)(mockdata, summarize=True, normvector=normvectors)
+
+    testing.assert_allclose(n_actual, n_expected)
+
+

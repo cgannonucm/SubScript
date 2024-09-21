@@ -2,7 +2,7 @@ import numpy as np
 import h5py
 from numpy import testing
 
-from subscript.nfilters import nfilter_virialized, nfilter_halos, nfilter_subhalos, nfand, nfor, nfnot
+from subscript.scripts.nfilters import nfilter_virialized, nfilter_halos, nfilter_subhalos, nfand, nfor, nfnot
 from subscript.defaults import  ParamKeys
 
 def test_nfilter_halos():

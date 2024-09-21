@@ -116,3 +116,9 @@ def test_multiproj():
     testing.assert_allclose(n_actual, n_expected)
 
 
+def test_multiproj_file():
+    path_dmo    = "tests/data/test.hdf5"
+    gout        = h5py.File(path_dmo)
+
+    nfproj   = freeze(nfilter_project2d, rmin=1E-1, rmax=2E-2)
+    n_actual = multiproj(nodecount, nfilter=nfproj)(gout, summarize=True, normvector=np.identity(3))

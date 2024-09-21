@@ -91,9 +91,9 @@ def nfilter_subhalos_valid(gout, mass_min, mass_max, key_mass=ParamKeys.mass,
     return a & b & c
 
 @gscript
-def nfilter_project_3d(gout, rmin, rmax, **kwargs):
+def nfilter_project3d(gout, rmin, rmax, **kwargs):
     return nfilter_range(gout, rmin, rmax, getval=project3d, **kwargs)
 
 @gscript
-def nfilter_project_2d(gout, rmin, rmax, normvector, **kwargs):
-    return nfilter_range(gout, rmin, rmax, getval=project2d, norm=norm, **kwargs)
+def nfilter_project2d(gout, rmin, rmax, normvector, **kwargs):
+    return nfilter_range(gout, rmin, rmax, getval=project2d, normvector=normvector, **kwargs)

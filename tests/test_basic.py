@@ -5,7 +5,7 @@ from numpy import testing
 from subscript.tabulatehdf5 import tabulate_trees
 from subscript.scripts.nodes import nodedata, nodecount
 from subscript.defaults import  ParamKeys
-from subscript.nfilters import nfilter_halos
+from subscript.scripts.nfilters import nfilter_halos
 
 
 def test_nfilter_virialized():

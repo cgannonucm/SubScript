@@ -50,6 +50,4 @@ def test_multi_proj():
     out_actual, dn_r = spatial2d_dn(mockdata, bins=bins, normvector=norm, summarize=True)
 
     testing.assert_allclose(dn_r, bins)
-    testing.assert_allclose(out_actual, out_expected)
-    
-
+    testing.assert_allclose(out_actual, out_expected) 

@@ -22,6 +22,14 @@ def test_nfilter_virialized():
     testing.assert_allclose(out_nd_flat, expected)
 
 
+    out_nd_2      = nodedata(gout, ParamKeys.mass, 
+                                nfilter=nfilter_halos, summarize=True)
+    
+    out_nd_flat_2 = np.asanyarray(out_nd_2).flatten()
+    expected_2    = 1E13
+    testing.assert_allclose(out_nd_flat_2, expected_2)
+
+
 def test_nfilter_nodecount():
     # Test script + filter
     #print(nfilter_halos(gout))

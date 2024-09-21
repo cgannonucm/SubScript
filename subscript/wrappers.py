@@ -92,8 +92,12 @@ def gscript_proj(func):
             if n is not None:
                 v = normvector[n]
                 n += 1  
+                if n >= len(normvector):
+                    n = 0
+
 
             return func(gout, *args, normvector=v, **kwargs)
+
 
         if isinstance(normvector, np.ndarray) and normvector.ndim == 1: 
             return wrap_inner(gout, *args, normvector=normvector, **kwargs)

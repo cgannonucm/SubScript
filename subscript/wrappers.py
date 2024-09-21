@@ -67,8 +67,12 @@ def gscript(func):
     
         _statfuncs = [np.mean, ] if statfuncs is None else statfuncs
 
-        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
-        summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs] 
+        if isinstance(outs[0], Iterable):
+            eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
+            summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs] 
+        else:
+            eval_stats = lambda f: f(np.asarray([treeo for treeo in outs]), axis=0)
+            summary = [eval_stats(f) for f in _statfuncs] 
 
         return format_out(summary)
     return wrap
@@ -101,5 +105,8 @@ def gscript_proj(func):
 
 def freeze(func, **kwargs):
     return lambda gout, *a, **k: func(gout, *a, **(k | kwargs))
+
+def multiproj(func, nfilter):
+    return gscript_proj(freeze(func, nfilter=nfilter))
 
 

@@ -23,7 +23,7 @@ def macro_run_file(gout, macros, statfuncs):
 def macro_runner_def(gouts, macros, statfuncs):
     return [(gout.filename, macro_run_file(gout, macros, statfuncs)) for gout in gouts]
 
-def gen_macro_runner(runner):
+def macro_gen_runner(runner):
     def macro_runner(macros:dict[str, Callable],  gouts:Iterable[(h5py.File)], statfuncs)->dict:
         results = runner(gouts, macros, statfuncs)
         macro_results = {key:val for key, val in results}
@@ -43,7 +43,7 @@ def macro_run(macros:dict[str, tuple[Callable, str]],
                 gouts:Iterable[(h5py.File)], 
                 statfuncs=None,runner=None):
 
-    _run = gen_macro_runner(macro_runner_def) if runner is None else runner
+    _run = macro_gen_runner(macro_runner_def) if runner is None else runner
 
     macro_results = _run(macros, gouts, statfuncs) 
 

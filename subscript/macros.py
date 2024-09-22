@@ -15,26 +15,35 @@ def macro_add(macros:dict[str, Callable], macro, label=None, **kwargs):
     _m[label] = freeze(macro, **kwargs)
     return _m
 
-def macro_runner_def(macros:dict[str, Callable],  gouts:Iterable[(h5py.File)], statfuncs)->dict:
-    _gouts = [tabulate_trees(o) for o in gouts]
-    out = {}
 
-    for o, trees in zip(gouts, _gouts):
-        out[o.filename] = {}
-        for key, func in macros.items():
-            sfs = [np.mean, ] if statfuncs is None else statfuncs 
-            vals = func(trees, summarize=True, statfuncs=sfs)
-            # For clarity, split into seperate entries for each stat function
-            for sf, val in zip(sfs, vals):
-                out[o.filename][f"{key} ({sf.__name__})"] = val
- 
-    return out
+
+def macro_run_file(gout, macros, statfuncs):
+    return {key:func(gout, summarize=True, statfuncs=statfuncs)  for key, func in macros.items()}
+
+def macro_runner_def(gouts, macros, statfuncs):
+    return [(gout.filename, macro_run_file(gout, macros, statfuncs)) for gout in gouts]
+
+def gen_macro_runner(runner):
+    def macro_runner(macros:dict[str, Callable],  gouts:Iterable[(h5py.File)], statfuncs)->dict:
+        results = runner(gouts, macros, statfuncs)
+        macro_results = {key:val for key, val in results}
+        out = {}
+
+        for _id, vals in macro_results.items():
+            out[_id] = {}
+            for key, val in vals.items():
+                sfs = [np.mean, ] if statfuncs is None else statfuncs 
+                # For clarity, split into seperate entries for each stat function
+                for sf, v in zip(sfs, val):
+                    out[_id][f"{key} ({sf.__name__})"] = v
+        return out
+    return macro_runner
 
 def macro_run(macros:dict[str, tuple[Callable, str]], 
                 gouts:Iterable[(h5py.File)], 
                 statfuncs=None,runner=None):
 
-    _run = macro_runner_def if runner is None else runner
+    _run = gen_macro_runner(macro_runner_def) if runner is None else runner
 
     macro_results = _run(macros, gouts, statfuncs) 
 

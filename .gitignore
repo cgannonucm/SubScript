@@ -164,3 +164,4 @@ cython_debug/
 *.hdf5
 test/out
 test/data
+test/data/parameters

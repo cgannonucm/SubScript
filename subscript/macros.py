@@ -61,8 +61,8 @@ def macro_run(macros:dict[str, tuple[Callable, str]],
             for nval, v in enumerate(_val): 
                 key_out = f"out{nval}"
                 if out[key].get(key_out) is None:
-                    _shape = val.shape if isinstance(val, np.ndarray) else (None, )
-                    out[key][key_out] = np.zeros(nouts, *_shape)
+                    _shape = (nouts, *v.shape) if isinstance(v, np.ndarray) else nouts
+                    out[key][key_out] = np.zeros(_shape)
 
                 out[key][key_out][n] = v
     return out

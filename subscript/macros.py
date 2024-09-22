@@ -32,34 +32,52 @@ def macro_runner_def(macros:dict[str, Callable],  gouts:Iterable[(h5py.File)], s
 
 def macro_run(macros:dict[str, tuple[Callable, str]], 
                 gouts:Iterable[(h5py.File)], 
-                statfuncs=None, runner=None):
+                statfuncs=None,runner=None):
 
     _run = macro_runner_def if runner is None else runner
 
-    macro_results = _run(macros, gouts, statfuncs)
+    macro_results = _run(macros, gouts, statfuncs) 
 
     # Create initial dictionary
     entry_fname = next(macro_results.__iter__())
     entry = macro_results[entry_fname]  
     nouts = len(macro_results)
+    
+    out = {i : {} for i in entry}
 
-    out = {key: np.zeros((nouts, *np.asarray(val).shape)) for key, val in entry.items()} 
-    #out["id"] = np.asarray(list(macro_results.keys()), dtype="utf-8") 
     ids = np.asarray(list(macro_results.keys()))
-    out["id"] = np.asarray([key.encode("ascii", "ignore") for key in macro_results.keys()])
-
+    out["id"] = {"out0": np.asarray([key.encode("ascii", "ignore") for key in macro_results.keys()])}
 
     for id, val in macro_results.items():
-        n = np.where(id.encode("ascii", "ignore") == out["id"])[0][0]
+        n = np.where(id.encode("ascii", "ignore") == out["id"]["out0"])[0][0]
 
-        for key, arr in val.items():
-            out[key][n] = arr
-    
+        for key, val in val.items():
+            # Handles Single output
+            _val = val
+            if (not isinstance(val, Iterable)) or isinstance(val, np.ndarray):
+                _val = [val, ]
+
+            # Handle multiple outputs
+            for nval, v in enumerate(_val): 
+                key_out = f"out{nval}"
+                if out[key].get(key_out) is None:
+                    _shape = val.shape if isinstance(val, np.ndarray) else (None, )
+                    out[key][key_out] = np.zeros(nouts, *_shape)
+
+                out[key][key_out][n] = v
     return out
+            
+            
 
 def macro_write_out_hdf5(f:h5py.File, macro_out, notes=None, stamp_date = True):
     for key, val in macro_out.items():
+        if isinstance(val, dict):
+            grp = f.create_group(key)
+            for _key, _val in val.items():
+                grp.create_dataset(_key, data=_val)
+            continue
         f.create_dataset(key, data=val)
+    
     now = datetime.now()
     f.attrs["date"] = now.strftime("%m/%d/%Y, %H:%M:%S")
     f.attrs["notes"] = str(notes)

@@ -1,3 +1,7 @@
+class Meta():
+    cache = True
+    """If true, use custom code when reading hdf5 to cache read data."""
+
 class ParamKeys():
     """Library of default parameters."""
     x = 'positionOrbitalX'

@@ -6,6 +6,7 @@ import time
 from collections import UserDict
 from subscript.defaults import ParamKeys
 from copy import copy
+from subscript.defaults import Meta
 
 class NodeProperties(UserDict):
     _nodefilter = None
@@ -58,11 +59,13 @@ class NodeProperties(UserDict):
             out = val
         elif isinstance(val, h5py.Dataset):
             _val = val[self._startn:self._stopn]
-            self.data[key] = _val
+            if Meta.cache: 
+                self.data[key] = _val
             out = _val
         elif isinstance(val, Callable):
             _val = val()[self._startn:self._stopn]
-            self.data[key] = _val
+            if Meta.cache:
+                self.data[key] = _val
             out = _val
         else:
             raise RuntimeError("Unrecognized Type") 

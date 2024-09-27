@@ -13,8 +13,7 @@ class NodeProperties(UserDict):
     _startn = 0
     _stopn = None
 
-    def __init__(self, d, nodefilter=None, startn = None, stopn=None):
-        self._nodefilter = nodefilter 
+    def __init__(self, d):
         out = super(NodeProperties,self).__init__()
         self.data = d
 
@@ -22,13 +21,8 @@ class NodeProperties(UserDict):
             raise RuntimeError(f"d must be a dictionary! Not type {type(d)}")
 
         if isinstance(d, NodeProperties):
-            if startn is not None or stopn is not None:
-                raise RuntimeError("Changing indexes is unsorported.")
             self._startn = d._startn
-            self._stopn = d._stopn
-        else:
-            self._startn = 0 if startn is None else startn
-            self._stopn = None if stopn is None else stopn
+            self._stopn =  d._stopn
 
     def __str__(self):
         return f"NodeData object"
@@ -37,12 +31,15 @@ class NodeProperties(UserDict):
         return f"NodeData object"
 
     def unfilter(self):
-        if self._nodefilter is not None:
+        # recursivly unfilter until reaching root
+        if isinstance(self.data, UserDict):
             return self.data.unfilter()
-        return NodeProperties(self)
+        return NodeProperties(self) 
 
     def filter(self, nodefilter):
-        return NodeProperties(self,nodefilter)
+        out = NodeProperties(self)
+        out._nodefilter = nodefilter
+        return out
 
     def get_filter(self):
         if self._nodefilter is not None:
@@ -135,5 +132,11 @@ def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = Non
     start = np.insert(np.cumsum(counts)[:-1], 0, 0)
     stop = np.cumsum(counts) 
 
-    #Carefull! Need copy here to avoid devious bugs
-    return [NodeProperties(copy(props), nodefilter=None, startn=n0, stopn=n1) for n0, n1 in zip(start, stop)]
+    def gen_nodeproperties(n0, n1):
+        #Carefull! Need copy here to avoid devious bugs             
+        out = NodeProperties(copy(props))
+        out._startn =  n0
+        out._stopn  =  n1
+        return out
+        
+    return [gen_nodeproperties(n0, n1) for n0, n1 in zip(start, stop)]

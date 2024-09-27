@@ -8,7 +8,7 @@ from subscript.defaults import  ParamKeys
 from subscript.scripts.nfilters import nfilter_halos
 
 
-def test_nfilter_virialized():
+def test_nfilter_nodes():
     # Test script + filter
     path_dmo    = "tests/data/test.hdf5"
     gout        = tabulate_trees(h5py.File(path_dmo))
@@ -16,7 +16,7 @@ def test_nfilter_virialized():
     out_nd      = nodedata(gout, (ParamKeys.mass, ParamKeys.z_lastisolated), 
                             nfilter=nfilter_halos, summarize=True,
                             statfuncs=(np.mean, np.std))
-    
+
     out_nd_flat = np.asanyarray(out_nd).flatten()
     expected    = np.array((1E13, 0.5, 0, 0))
     testing.assert_allclose(out_nd_flat, expected)
@@ -41,4 +41,3 @@ def test_nfilter_nodecount():
     out_actual = nodecount(mockdata)
     out_expected = 10
     assert(out_actual == out_expected)
-

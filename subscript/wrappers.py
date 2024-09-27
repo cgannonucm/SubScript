@@ -47,10 +47,12 @@ def gscript(func):
         for nodestree in trees:
             _nodestree = nodestree.unfilter()
             _nodefilter = None
-            if nfilter is not None:
+            if isinstance(nfilter, Callable):
                 _nodefilter = nfilter(_nodestree, **kwargs)
+            elif isinstance(nfilter,np.ndarray):
+                _nodefilter = nfilter
             _nodestree_filtered = _nodestree.filter(_nodefilter)
-            o = func(_nodestree_filtered, *args, **kwargs)
+            o = func(_nodestree_filtered, *args, **(kwargs | dict(nfilter=_nodefilter)))
             single_out = isinstance(o, np.ndarray) 
             _o = [o,] if single_out else o
             outs.append(_o)

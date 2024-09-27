@@ -56,7 +56,6 @@ def test_macro_run():
     
     for key, val,  in out_expected.items():
         for _key, _val in val.items():
-            print(key, _key)
             testing.assert_allclose(out_actual[key][_key], _val, rtol=1E-6)
 
 def test_macro_out_hdf5():

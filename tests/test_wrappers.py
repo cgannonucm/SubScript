@@ -6,7 +6,7 @@ from numpy import testing
 from subscript.defaults import ParamKeys
 from subscript.scripts.histograms import  spatial2d_dn
 from subscript.scripts.nodes import nodedata, nodecount
-from subscript.wrappers import freeze, gscript_proj, multiproj
+from subscript.wrappers import freeze, gscript, gscript_proj, multiproj
 from subscript.scripts.nfilters import nfilter_project2d
 
 def test_tabulate_multi_files():
@@ -122,3 +122,28 @@ def test_multiproj_file():
 
     nfproj   = freeze(nfilter_project2d, rmin=1E-1, rmax=2E-2)
     n_actual = multiproj(nodecount, nfilter=nfproj)(gout, summarize=True, normvector=np.identity(3))
+
+def test_gscript_unfilter():
+    # Ensure the expected behaviour occours when calling a script within a script
+    # The inner script should recieve the unfilter version of the original data passed
+    
+    nfilter = np.asarray((True, True, True, False, False, False))
+    
+    mock_data = {
+                    "test": np.arange(6)
+                }
+
+    n = 0
+    @gscript
+    def testscript(gout, **kwargs):
+        nonlocal n
+        n += 1
+        if n > 20:
+            return
+        print(kwargs)
+        assert(nodecount(gout) == 6)
+        assert(nodecount(gout, **kwargs) == 3)
+
+        testscript(gout, **kwargs)
+    
+    testscript(mock_data, nfilter=nfilter) 

@@ -6,6 +6,7 @@ import time
 from collections import UserDict
 from subscript.defaults import ParamKeys
 from copy import copy
+from subscript.defaults import Meta
 
 class NodeProperties(UserDict):
     _nodefilter = None
@@ -58,11 +59,13 @@ class NodeProperties(UserDict):
             out = val
         elif isinstance(val, h5py.Dataset):
             _val = val[self._startn:self._stopn]
-            self.data[key] = _val
+            if Meta.cache: 
+                self.data[key] = _val
             out = _val
         elif isinstance(val, Callable):
             _val = val()[self._startn:self._stopn]
-            self.data[key] = _val
+            if Meta.cache:
+                self.data[key] = _val
             out = _val
         else:
             raise RuntimeError("Unrecognized Type") 
@@ -80,7 +83,7 @@ def get_galacticus_outputs(galout:h5py.File)->np.ndarray[int]:
     return np.sort(outputs)
 
 def get_custom_dsets(goutn:h5py.Group):
-    """Generates standar custom datasets to make data analysis easier"""    
+    """Example of custom datasets"""    
 
     # Total number of nodes
     nodecount = np.sum(goutn["mergerTreeCount"][:]) 
@@ -96,7 +99,6 @@ def get_custom_dsets(goutn:h5py.Group):
         "custom_node_tree_outputorder": lambda : np.concatenate([np.full(count,i) for (i,count) in enumerate(counts)]),
         "custom_id"                   : lambda : np.arange(nodecount),
     }
-
 
 def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = None, **kwargs)->NodeProperties:
     """Reads node propreties from a galacticus HDF5 file"""
@@ -123,7 +125,7 @@ def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = Non
         # First entry in tuple marks this as a h5py dataset 
         nodedata[key] = val
 
-    get_cdsets = get_custom_dsets if custom_dsets is None else custom_dsets
+    get_cdsets = lambda i: {} if custom_dsets is None else custom_dsets
  
     props = get_cdsets(outn) | nodedata
     

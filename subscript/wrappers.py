@@ -33,9 +33,13 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     return _gout
 
 def gscript(func):
-    def wrap(gout:(h5py.File | NodeProperties | dict), *args, 
-                nfilter:(Callable | np.ndarray[bool])=None, summarize:bool=False, statfuncs:Iterable[Callable] = None,
-                out_index:int=-1, **kwargs): 
+    def wrap(gout:(h5py.File | NodeProperties | dict), 
+                *args, 
+                nfilter:(Callable | np.ndarray[bool])=None, 
+                summarize:bool=False, 
+                statfuncs:Iterable[Callable] = None,
+                out_index:int=-1,
+                **kwargs): 
         outs = []         
         trees = format_nodedata(gout, out_index)
         ntrees = len(trees)

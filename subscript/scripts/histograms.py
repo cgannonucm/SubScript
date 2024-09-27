@@ -18,7 +18,7 @@ def hist(gout, key_hist=None, getval=None, bins=None, range=None, density=False,
         a = gout[key_hist]
     if getval is not None:
         a = getval(gout, **kwargs)
-    return np.histogram(a, bins=bins, range=range, density=density, weights=weights, **kwargs)
+    return np.histogram(a, bins=bins, range=range, density=density, weights=weights)
 
 @gscript
 def massfunction(gout, key_mass=ParamKeys.mass, bins=None, range=None, **kwargs): 

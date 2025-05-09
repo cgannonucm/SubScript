@@ -39,7 +39,22 @@ def gscript(func):
                 summarize:bool=False, 
                 statfuncs:Iterable[Callable] = None,
                 out_index:int=-1,
-                **kwargs): 
+                **kwargs):         
+        if gout is None:
+            print(kwargs)
+            _kwargs = dict(
+                           nfilter=nfilter, 
+                           summarize=summarize,
+                           statfuncs=statfuncs,
+                           out_index=out_index,
+                          )
+
+            return lambda gout, **k: wrap(
+                                          gout,
+                                          *args,
+                                          **(_kwargs | kwargs | k)
+                                         )
+        
         outs = []         
         trees = format_nodedata(gout, out_index)
         ntrees = len(trees)

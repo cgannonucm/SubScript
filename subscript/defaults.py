@@ -24,6 +24,8 @@ class ParamKeys():
     density_profile_radius = 'densityProfileRadius'
     density_profile = 'densityProfile'
     z_lastisolated = 'redshiftLastIsolated'
+    tnfw_rt = 'radiusTidalTruncationNFW'
+    tnfw_p0 = 'densityNormalizationTidalTruncationNFW'
     custom_id = 'custom_id'
     custom_tree_index = 'custom_node_tree'
     custom_tree_outputorder = 'custom_node_outputorder'

@@ -145,7 +145,6 @@ def test_gscript_unfilter():
         n += 1
         if n > 20:
             return
-        print(kwargs)
         assert(nodecount(gout) == 6)
         assert(nodecount(gout, **kwargs) == 3)
 

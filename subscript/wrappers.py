@@ -41,7 +41,6 @@ def gscript(func):
                 out_index:int=-1,
                 **kwargs):         
         if gout is None:
-            print(kwargs)
             _kwargs = dict(
                            nfilter=nfilter, 
                            summarize=summarize,

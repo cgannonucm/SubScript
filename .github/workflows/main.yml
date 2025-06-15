@@ -76,7 +76,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: build-env
-          python-version: 3.10
+          python-version: 3.11
           auto-update-conda: true
           channels: conda-forge
 

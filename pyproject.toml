@@ -19,7 +19,7 @@ classifiers = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["subscript"]
+packages = ["subhaloscript"]
 
 [project.urls]
 "Homepage" = "https://github.com/cgannonucm/SubScript"

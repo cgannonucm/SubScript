@@ -9,6 +9,36 @@ from copy import copy
 from subscript.defaults import Meta
 
 class NodeProperties(UserDict):
+    """
+    Dictionary-like wrapper for Galacticus node data with filtering support.
+
+    This class wraps a dictionary or UserDict containing node data from Galacticus outputs.
+    It supports filtering nodes and slicing subsets of nodes for analysis.
+
+    Parameters
+    ----------
+    d : dict or UserDict
+        Dictionary-like object containing node data arrays or datasets.
+
+    Raises
+    ------
+    RuntimeError
+        If the input `d` is not a dictionary-like object.
+
+    Attributes
+    ----------
+    _nodefilter : np.ndarray or None
+        Boolean mask array for filtering nodes.
+    _startn : int
+        Start index for slicing nodes.
+    _stopn : int or None
+        Stop index for slicing nodes.
+
+    Notes
+    -----
+    The class supports lazy loading from h5py datasets and callable objects that
+    return arrays. When a filter is set, returned arrays are masked accordingly.
+    """
     _nodefilter = None
     _startn = 0
     _stopn = None
@@ -72,6 +102,20 @@ class NodeProperties(UserDict):
         return out[self._nodefilter] 
                 
 def get_galacticus_outputs(galout:h5py.File)->np.ndarray[int]:
+    """
+    Extract sorted output snapshot indices from a Galacticus HDF5 file.
+
+    Parameters
+    ----------
+    galout : h5py.File
+        Open Galacticus HDF5 file containing simulation outputs.
+
+    Returns
+    -------
+    np.ndarray[int]
+        Sorted array of integer output snapshot indices extracted from the
+        'Outputs' group keys.
+    """
     output_groups:h5py.Group = galout["Outputs"] 
 
     outputs = np.zeros(len(output_groups), dtype=int)
@@ -80,6 +124,27 @@ def get_galacticus_outputs(galout:h5py.File)->np.ndarray[int]:
     return np.sort(outputs)
 
 def get_custom_dsets(goutn:h5py.Group):
+    """
+    Generate example custom datasets from a Galacticus output group.
+
+    Parameters
+    ----------
+    goutn : h5py.Group
+        HDF5 group corresponding to a specific output snapshot in Galacticus data.
+
+    Returns
+    -------
+    dict[str, Callable]
+        Dictionary mapping custom dataset names to functions that return
+        numpy arrays representing the dataset.
+
+    Notes
+    -----
+    Example datasets include:
+    - 'custom_node_tree': array indicating tree index for each node.
+    - 'custom_node_tree_outputorder': array indicating output order index per node.
+    - 'custom_id': unique node identifiers as an integer range.
+    """
     """Example of custom datasets"""    
 
     # Total number of nodes
@@ -98,7 +163,32 @@ def get_custom_dsets(goutn:h5py.Group):
     }
 
 def tabulate_trees(gout:h5py.File, out_index:int=-1, custom_dsets:Callable = None, **kwargs)->NodeProperties:
-    """Reads node propreties from a galacticus HDF5 file"""
+    """
+    Load and tabulate node properties for all trees in a Galacticus output snapshot.
+
+    Parameters
+    ----------
+    gout : h5py.File
+        Dictionary-like structure containing Galacticus output node data.
+    out_index : int, optional
+        Index of the output snapshot to load (default is -1, which selects the
+        latest available output).
+    custom_dsets : Callable, optional
+        Function that returns a dictionary of custom datasets for the output group.
+    **kwargs
+        Additional keyword arguments (currently unused).
+
+    Returns
+    -------
+    list[NodeProperties]
+        List of NodeProperties objects, each corresponding to a single merger tree
+        in the specified output snapshot.
+
+    Notes
+    -----
+    Each NodeProperties instance contains node data arrays sliced for that tree,
+    facilitating independent analysis of each tree's nodes.
+    """
     outs = gout["Outputs"] 
 
     _key_index = out_index

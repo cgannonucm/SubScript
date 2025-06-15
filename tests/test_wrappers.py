@@ -90,6 +90,12 @@ def test_gscript_proj_wrap():
 
     testing.assert_allclose(n_actual, n_expected)
 
+    normvectors2 = ((1,0,0), (0,1,0), (0,0,1))
+
+    n_actual = gscript_proj(freeze(nodecount, nfilter=nfproj))(mockdata, summarize=True, normvector=normvectors2)
+
+    testing.assert_allclose(n_actual, n_expected)
+
 def test_multiproj():
     test_x       = np.asarray((0.0, 0.25, 0.5       , 0.7       , 0.8        , 1.3, 1.4))
     test_y       = np.asarray((0.0, 0.00, 0.5       , 0.3       , 0.9        , 0.0, 0.0))

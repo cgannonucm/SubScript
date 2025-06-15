@@ -3,7 +3,7 @@ class Meta():
     """If true, use custom code when reading hdf5 to cache read data."""
 
 class ParamKeys():
-    """Library of default parameters."""
+    """Library of default galacticus parameters."""
     x = 'positionOrbitalX'
     y = 'positionOrbitalY'
     z = 'positionOrbitalZ'

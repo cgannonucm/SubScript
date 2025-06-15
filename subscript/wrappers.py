@@ -103,6 +103,7 @@ def gscript_proj(func):
     If multiple projection vectors are passed, they are treated as seperate "trees".
     """
     def wrap(gout, normvector, *args, **kwargs):
+        normvector = np.asarray(normvector)
         n = None
 
         @gscript
@@ -119,7 +120,7 @@ def gscript_proj(func):
             return func(gout, *args, normvector=v, **kwargs)
 
 
-        if isinstance(normvector, np.ndarray) and normvector.ndim == 1: 
+        if normvector.ndim == 1:
             return wrap_inner(gout, *args, normvector=normvector, **kwargs)
 
         n = 0

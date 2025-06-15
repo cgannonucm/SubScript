@@ -4,8 +4,10 @@ from typing import Any, Callable, Iterable, List
 from collections import UserDict
 from functools import reduce
 import numpy as np
+from numpy.typing import ArrayLike
 import h5py
 
+from subscript.util import is_arraylike
 from subscript.tabulatehdf5 import NodeProperties, tabulate_trees
 from subscript import tabulatehdf5
 from subscript import defaults
@@ -56,15 +58,17 @@ def gscript(func):
         
         outs = []         
         trees = format_nodedata(gout, out_index)
-        ntrees = len(trees)
 
         for nodestree in trees:
             _nodestree = nodestree.unfilter()
-            _nodefilter = None
-            if isinstance(nfilter, Callable):
+            if nfilter is None:
+                _nodefilter = None
+            elif isinstance(nfilter, Callable):
                 _nodefilter = nfilter(_nodestree, **kwargs)
-            elif isinstance(nfilter,np.ndarray):
-                _nodefilter = nfilter
+            elif is_arraylike(nfilter):
+                _nodefilter = np.asarray(nfilter, dtype=bool)
+            else:
+                TypeError("Unrecognized type provided to nodefilter")
             _nodestree_filtered = _nodestree.filter(_nodefilter)
             o = func(_nodestree_filtered, *args, **(kwargs | dict(nfilter=_nodefilter)))
             single_out = isinstance(o, np.ndarray) 

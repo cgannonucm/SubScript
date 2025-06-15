@@ -110,7 +110,7 @@ def withinrv(gout, key_rvir=ParamKeys.rvir, key_mass_basic=ParamKeys.mass_basic,
     return interval(gout, min=0, max=rv, inclmin=True, inclmax=inclusive, getval=project3d)
 
 
-@deprecated("Use  withinrv() instead")
+@deprecated("Use withinrv() instead")
 def nfilter_virialized(*args, **kwargs):
     return withinrv(*args, **kwargs)
 

@@ -81,6 +81,6 @@ jobs:
           conda info
           conda list
       - name: List directory
-        run: $CONDA/envs/andaconda-client-env -lah
+        run: ls $CONDA/envs/andaconda-client-env
 
 

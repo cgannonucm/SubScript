@@ -87,6 +87,10 @@ jobs:
           conda config --set anaconda_upload no
         shell: bash -l {0}
 
+      - name: Build the conda package
+        run: conda-build .Add commentMore actions
+        shell: bash -l {0}
+
       - name: Upload to Anaconda
         env:
           ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}

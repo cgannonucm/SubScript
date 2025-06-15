@@ -102,7 +102,7 @@ jobs:
           ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
         run: |
           anaconda login --user cgannonucm --password $ANACONDA_API_TOKEN
-          anaconda upload $(conda-build . --output)
+          anaconda upload dist/*
         shell: bash -l {0}
 
 

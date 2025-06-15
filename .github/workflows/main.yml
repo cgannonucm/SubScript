@@ -78,10 +78,18 @@ jobs:
           auto-update-conda: true          
           channels: conda-forge
 
+
+        
       - name: Install conda-build and dependencies
         run: |
           conda install conda-build anaconda-client
           conda config --set anaconda_upload no
+        shell: bash -l {0}
+
+      - name: Show directory contents
+        run: |
+          echo "Current dir: $(pwd)"
+          ls -la
         shell: bash -l {0}
 
       - name: Build the conda package

@@ -13,6 +13,21 @@ from subscript import tabulatehdf5
 from subscript import defaults
 
 def reduce_input(l, out=None):
+    """
+    Recursively flatten a nested list structure and collect dictionaries.
+
+    Parameters
+    ----------
+    l : list
+        Nested list potentially containing dictionaries or UserDict objects.
+    out : list, optional
+        List to accumulate dictionaries. If None, a new list is created.
+
+    Returns
+    -------
+    list of dict or UserDict
+        Flattened list containing all dictionaries/UserDicts found in `l`.
+    """
     if out is None:
         out = []
     
@@ -24,6 +39,27 @@ def reduce_input(l, out=None):
     return out
  
 def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
+    """
+    Convert various Galacticus-like outputs into a list of NodeProperties objects.
+
+    Parameters
+    ----------
+    gout : h5py.File or dict or UserDict or iterable
+        Galacticus-like output data, such as an HDF5 file, a node property dictionary,
+        or an iterable of such objects.
+    out_index : int, optional
+        Index of the output to extract when `gout` is an HDF5 file (default is -1).
+
+    Returns
+    -------
+    iterable of NodeProperties
+        A list of NodeProperties wrapping the processed input data.
+
+    Raises
+    ------
+    RuntimeError
+        If the type of `gout` is not recognized.
+    """
     if isinstance(gout, (dict, UserDict)):
         _gout = [NodeProperties(gout), ]
     elif isinstance(gout, h5py.File):
@@ -35,6 +71,42 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     return _gout
 
 def gscript(func):
+    """
+    Decorator to wrap a function that processes Galacticus-like node data.
+
+    This decorator handles input data formatting, node filtering, multiple tree realizations,
+    and optional summary statistics computation.
+
+    Parameters
+    ----------
+    func : callable
+        The function to be wrapped. Must accept a filtered NodeProperties object
+        as the first argument as well as an arbitrary number of key word arguments.
+
+    Returns
+    -------
+    callable
+        Wrapped function that accepts:
+
+        gout : h5py.File, NodeProperties, or dict
+            Dictionary-like structure containing Galacticus output node data.
+        *args : tuple
+            Additional positional arguments passed to `func`.
+        nfilter : callable or array-like of bool, optional
+            Node filter applied before passing data to `func`.
+        summarize : bool, optional
+            If True, return summary statistics over all trees.
+        statfuncs : iterable of callables, optional
+            Functions to compute summary statistics (default: [np.mean]).
+        out_index : int, optional
+            Output index to extract if `gout` is an HDF5 file.
+        **kwargs : dict
+            Additional keyword arguments passed to `func`.
+
+    Notes
+    -----
+    If `gout` is None, returns a partially applied wrapper function to be called later.
+    """
     def wrap(gout:(h5py.File | NodeProperties | dict), 
                 *args, 
                 nfilter:(Callable | np.ndarray[bool])=None, 
@@ -61,6 +133,7 @@ def gscript(func):
 
         for nodestree in trees:
             _nodestree = nodestree.unfilter()
+
             if nfilter is None:
                 _nodefilter = None
             elif isinstance(nfilter, Callable):
@@ -69,7 +142,9 @@ def gscript(func):
                 _nodefilter = np.asarray(nfilter, dtype=bool)
             else:
                 TypeError("Unrecognized type provided to nodefilter")
+
             _nodestree_filtered = _nodestree.filter(_nodefilter)
+
             o = func(_nodestree_filtered, *args, **(kwargs | dict(nfilter=_nodefilter)))
             single_out = isinstance(o, np.ndarray) 
             _o = [o,] if single_out else o
@@ -103,8 +178,33 @@ def gscript(func):
 
 def gscript_proj(func):
     """
-    Wraper for scripts that involve projection, allows  passing of multiple normal vectors.
-    If multiple projection vectors are passed, they are treated as seperate "trees".
+    Decorator for functions that involve projection with one or multiple normal vectors.
+
+    This decorator allows passing multiple projection vectors, treating each as a separate
+    realization (tree) and processing them accordingly.
+
+    Parameters
+    ----------
+    func : callable
+        Function to wrap. Must accept a `normvector` argument representing the projection vector.
+
+    Returns
+    -------
+    callable
+        Wrapped function that accepts:
+
+        gout : h5py.File, NodeProperties, or dict
+            Dictionary-like structure containing Galacticus output node data.
+        normvector : array-like
+            One or more normal vectors used for projection.
+        *args : tuple
+            Additional positional arguments passed to `func`.
+        **kwargs : dict
+            Additional keyword arguments passed to `func`.
+
+    Notes
+    -----
+    If `normvector` is a 2D array, each vector is treated as a separate tree and processed individually.
     """
     def wrap(gout, normvector, *args, **kwargs):
         normvector = np.asarray(normvector)
@@ -133,9 +233,39 @@ def gscript_proj(func):
     return wrap
 
 def freeze(func, **kwargs):
+    """
+    Return a new function with fixed keyword arguments applied.
+
+    Parameters
+    ----------
+    func : callable
+        The function to partially apply keyword arguments to.
+    **kwargs : dict
+        Keyword arguments to fix in the returned function.
+
+    Returns
+    -------
+    callable
+        A new function that calls `func` with the given `kwargs` fixed.
+    """
     return lambda gout, *a, **k: func(gout, *a, **(k | kwargs))
 
 def multiproj(func, nfilter):
+    """
+    Apply `gscript_proj` decorator to a function with a fixed node filter.
+
+    Parameters
+    ----------
+    func : callable
+        Function to wrap, expected to accept a node filter.
+    nfilter : callable or array-like of bool
+        Node filter to be fixed for the wrapped function.
+
+    Returns
+    -------
+    callable
+        Function wrapped with `gscript_proj` and the node filter applied.
+    """
     return gscript_proj(freeze(func, nfilter=nfilter))
 
 

@@ -81,8 +81,6 @@ jobs:
           conda info
           conda list
       - name: List directory
-        run: | 
-          mkdir ~/etc 
-          ls -lah
+        run: $CONDA/envs/andaconda-client-env -lah
 
 

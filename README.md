@@ -1,5 +1,5 @@
 # SubScript
-Utility functions for analyzing subhalo distributions.
+Utility functions for analyzing subhalo distributions, particularly from the Galacticus (https://github.com/galacticusorg/galacticus) galaxy formation model. 
 
 ## Installation 
 Install via pip

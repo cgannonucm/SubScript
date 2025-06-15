@@ -82,12 +82,12 @@ jobs:
         run: |
           conda install conda-build anaconda-client
           conda config --set anaconda_upload no
-        shell: conda
+        shell: bash -l {0}
 
       - name: Build the conda package
         run: |
           conda-build .
-        shell: conda
+        shell: bash -l {0}
 
       - name: Upload to Anaconda
         env:
@@ -95,6 +95,7 @@ jobs:
         run: |
           anaconda login --token $ANACONDA_API_TOKEN
           anaconda upload $(conda-build . --output)
-        shell: conda
+        shell: bash -l {0}
+
 
 

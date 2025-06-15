@@ -1,0 +1,38 @@
+package:
+  name: subhaloscript
+  version: "0.1.0"
+
+source:
+  path: ../  # Or use `git_url`/`url` if not building from local files
+
+build:
+  noarch: python
+  script: python -m pip install . --no-deps --ignore-installed -vv
+
+requirements:
+  host:
+    - python >=3.11
+    - pip
+  run:
+    - python >=3.8
+    - numpy
+    - h5py
+    - pandas
+    - scipy
+    - h5py
+    - scikit-learn
+
+test:
+  imports:
+    - subscript  # Replace with your top-level module name
+
+
+about:
+  home:  https://github.com/cgannonucm/SubScript
+  license: GPL-3.0
+  license_file: LICENSE
+  summary: "A toolkit for analyzing subhalo data from Galacticus"
+
+extra:
+  recipe-maintainers:
+    - cgannonucm

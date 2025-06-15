@@ -5,7 +5,7 @@ from numpy import testing
 from subscript.tabulatehdf5 import tabulate_trees
 from subscript.scripts.nodes import nodedata, nodecount
 from subscript.defaults import  ParamKeys
-from subscript.scripts.nfilters import nfilter_halos
+from subscript.scripts.nfilters import hosthalos
 
 
 def test_nfilter_nodes():
@@ -14,7 +14,7 @@ def test_nfilter_nodes():
     gout        = tabulate_trees(h5py.File(path_dmo))
     #print(nfilter_halos(gout))
     out_nd      = nodedata(gout, (ParamKeys.mass, ParamKeys.z_lastisolated), 
-                            nfilter=nfilter_halos, summarize=True,
+                            nfilter=hosthalos, summarize=True,
                             statfuncs=(np.mean, np.std))
 
     out_nd_flat = np.asanyarray(out_nd).flatten()
@@ -23,7 +23,7 @@ def test_nfilter_nodes():
 
 
     out_nd_2      = nodedata(gout, ParamKeys.mass, 
-                                nfilter=nfilter_halos, summarize=True)
+                                nfilter=hosthalos, summarize=True)
     
     out_nd_flat_2 = np.asanyarray(out_nd_2).flatten()
     expected_2    = 1E13

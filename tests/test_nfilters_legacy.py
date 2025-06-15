@@ -2,43 +2,43 @@ import numpy as np
 import h5py
 from numpy import testing
 
-from subscript.scripts.nfilters import withinrv, hosthalos, subhalos, logical_and, logical_or, logical_not, r2d
+from subscript.scripts.nfilters import nfilter_virialized, nfilter_halos, nfilter_subhalos, nfand, nfor, nfnot, nfilter_project2d
 from subscript.defaults import  ParamKeys
 
 def test_nfilter_halos():
     mockdata = {
                     "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
                 }
-    out_actual = hosthalos(mockdata)
+    out_actual = nfilter_halos(mockdata)
     out_expected = np.asarray((True, False, True, True, False), dtype=bool)
-    
+
     testing.assert_equal(out_actual, out_expected)
 
 def test_nfilter_subhalos():
     mockdata = {
                     "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
                 }
-    out_actual = subhalos(mockdata)
+    out_actual = nfilter_subhalos(mockdata)
     out_expected = np.asarray((False, True, False, False, True), dtype=bool)
-    
+
     testing.assert_equal(out_actual, out_expected)
 
 def test_nfilter_logical_and():
     mockdata = {
                 "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
                }
- 
-    test = logical_and(hosthalos, subhalos)
+
+    test = nfand(nfilter_halos, nfilter_subhalos)
     out_actual = test(mockdata)
     out_expected = np.zeros(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
 
-    test = logical_and(hosthalos, subhalos(mockdata))
+    test = nfand(nfilter_halos, nfilter_subhalos(mockdata))
     out_actual = test(mockdata)
     out_expected = np.zeros(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
 
-    test = logical_and(hosthalos(mockdata), subhalos)
+    test = nfand(nfilter_halos(mockdata), nfilter_subhalos)
     out_actual = test(mockdata)
     out_expected = np.zeros(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
@@ -47,18 +47,18 @@ def test_nfilter_logical_and():
     mockdata = {
                 "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
                }
- 
-    test = logical_or(hosthalos, subhalos)
+
+    test = nfor(nfilter_halos, nfilter_subhalos)
     out_actual = test(mockdata)
     out_expected = np.ones(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
 
-    test = logical_or(hosthalos, subhalos(mockdata))
+    test = nfor(nfilter_halos, nfilter_subhalos(mockdata))
     out_actual = test(mockdata)
     out_expected = np.ones(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
 
-    test = logical_or(hosthalos(mockdata), subhalos)
+    test = nfor(nfilter_halos(mockdata), nfilter_subhalos)
     out_actual = test(mockdata)
     out_expected = np.ones(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
@@ -67,13 +67,13 @@ def test_nfilter_logical_not():
     mockdata = {
                 "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
                }
- 
-    test = logical_not(hosthalos)
+
+    test = nfnot(nfilter_halos)
     out_actual = test(mockdata)
     out_expected = np.logical_not(np.asarray((1.0, 0.0, 1.0, 1.0, 0.0)))
     testing.assert_equal(out_actual, out_expected)
 
-    test = logical_not(hosthalos(mockdata))
+    test = nfnot(nfilter_halos(mockdata))
     out_actual = test(mockdata)
     out_expected = np.logical_not(np.asarray((1.0, 0.0, 1.0, 1.0, 0.0)))
     testing.assert_equal(out_actual, out_expected)
@@ -87,10 +87,10 @@ def test_nfilter_virialized():
                 ParamKeys.y          : np.array((0  , 1.0, 0.5, 0  , 0.1)),
                 ParamKeys.z          : np.array((0  , 0  , 0.5, 0  , 0.1))
     }
-    
+
     # Create test
-    out_rv       = withinrv(mockdata)
-    out_expected = np.array((True, False, False, True, True)) 
+    out_rv       = nfilter_virialized(mockdata)
+    out_expected = np.array((True, False, False, True, True))
     testing.assert_equal(out_rv, out_expected)
 
 
@@ -111,8 +111,6 @@ def test_nfilter_project2d():
     rmin, rmax = 0.2, 0.5
     filter_expected = (r_xy_expected > rmin) & (r_xy_expected < rmax)
 
-    filter_actual   = r2d(mockdata, rmin=rmin, rmax=rmax, normvector=np.array((0, 0, 1)))
+    filter_actual   = nfilter_project2d(mockdata, rmin=rmin, rmax=rmax, normvector=np.array((0, 0, 1)))
 
     testing.assert_equal(filter_actual, filter_expected)
-
-

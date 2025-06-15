@@ -6,7 +6,7 @@ import h5py
 from subscript.wrappers import freeze
 from subscript.scripts.nodes import nodedata
 from subscript.defaults import ParamKeys
-from subscript.scripts.nfilters import nfilter_halos
+from subscript.scripts.nfilters import hosthalos
 from subscript.macros import macro_run, macro_write_out_hdf5
 from subscript.scripts.histograms import massfunction
 
@@ -19,9 +19,9 @@ def test_macro_run():
     massfunction_bins = np.logspace(10, 11, 5)
     
     macros = {
-                'haloMass'    : freeze(nodedata, key=ParamKeys.mass_basic, nfilter=nfilter_halos),
-                'z'           : freeze(nodedata, key=ParamKeys.z_lastisolated, nfilter=nfilter_halos),
-                'haloMass, z' : freeze(nodedata, key=(ParamKeys.mass_basic, ParamKeys.z_lastisolated), nfilter=nfilter_halos),
+                'haloMass'    : freeze(nodedata, key=ParamKeys.mass_basic, nfilter=hosthalos),
+                'z'           : freeze(nodedata, key=ParamKeys.z_lastisolated, nfilter=hosthalos),
+                'haloMass, z' : freeze(nodedata, key=(ParamKeys.mass_basic, ParamKeys.z_lastisolated), nfilter=hosthalos),
                 'massfunction': freeze(massfunction, bins=massfunction_bins)
     }
       
@@ -65,9 +65,9 @@ def test_macro_out_hdf5():
     gout2 = h5py.File(path_dmo2)
     
     macros = {
-                "haloMass"    : freeze(nodedata, key=ParamKeys.mass_basic, nfilter=nfilter_halos),
-                "z"           : freeze(nodedata, key=ParamKeys.z_lastisolated, nfilter=nfilter_halos),
-                "haloMass, z" : freeze(nodedata, key=(ParamKeys.mass_basic, ParamKeys.z_lastisolated), nfilter=nfilter_halos),
+                "haloMass"    : freeze(nodedata, key=ParamKeys.mass_basic, nfilter=hosthalos),
+                "z"           : freeze(nodedata, key=ParamKeys.z_lastisolated, nfilter=hosthalos),
+                "haloMass, z" : freeze(nodedata, key=(ParamKeys.mass_basic, ParamKeys.z_lastisolated), nfilter=hosthalos),
     }
 
 

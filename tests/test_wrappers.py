@@ -8,7 +8,7 @@ from subscript.defaults import ParamKeys
 from subscript.scripts.histograms import  spatial2d_dn, massfunction
 from subscript.scripts.nodes import nodedata, nodecount
 from subscript.wrappers import freeze, gscript, gscript_proj, multiproj
-from subscript.scripts.nfilters import nfilter_project2d, nfilter_halos
+from subscript.scripts.nfilters import r2d, hosthalos
 from subscript.macros import macro_run, macro_write_out_hdf5
 
 
@@ -84,7 +84,7 @@ def test_gscript_proj_wrap():
                   +np.sum((r_yz_expected >= rmin) & (r_yz_expected <= rmax))
                 ) / 3
 
-    nfproj   = freeze(nfilter_project2d, rmin=rmin, rmax=rmax)
+    nfproj   = freeze(r2d, rmin=rmin, rmax=rmax)
  
     n_actual = gscript_proj(freeze(nodecount, nfilter=nfproj))(mockdata, summarize=True, normvector=normvectors)
 
@@ -114,7 +114,7 @@ def test_multiproj():
                   +np.sum((r_yz_expected >= rmin) & (r_yz_expected <= rmax))
                 ) / 3
 
-    nfproj   = freeze(nfilter_project2d, rmin=rmin, rmax=rmax)
+    nfproj   = freeze(r2d, rmin=rmin, rmax=rmax)
  
     n_actual = multiproj(nodecount, nfilter=nfproj)(mockdata, summarize=True, normvector=normvectors)
 
@@ -125,7 +125,7 @@ def test_multiproj_file():
     path_dmo    = "tests/data/test.hdf5"
     gout        = h5py.File(path_dmo)
 
-    nfproj   = freeze(nfilter_project2d, rmin=1E-1, rmax=2E-2)
+    nfproj   = freeze(r2d, rmin=1E-1, rmax=2E-2)
     n_actual = multiproj(nodecount, nfilter=nfproj)(gout, summarize=True, normvector=np.identity(3))
 
 def test_gscript_unfilter():
@@ -159,9 +159,9 @@ def test_autofreeze():
     gout2 = h5py.File(path_dmo2)
     
     macros = {
-                "haloMass"    : nodedata(None, key=ParamKeys.mass_basic, nfilter=nfilter_halos),
-                "z"           : nodedata(None, key=ParamKeys.z_lastisolated, nfilter=nfilter_halos),
-                "haloMass, z" : nodedata(None, key=(ParamKeys.mass_basic, ParamKeys.z_lastisolated), nfilter=nfilter_halos),
+                "haloMass"    : nodedata(None, key=ParamKeys.mass_basic, nfilter=hosthalos),
+                "z"           : nodedata(None, key=ParamKeys.z_lastisolated, nfilter=hosthalos),
+                "haloMass, z" : nodedata(None, key=(ParamKeys.mass_basic, ParamKeys.z_lastisolated), nfilter=hosthalos),
     }
 
 

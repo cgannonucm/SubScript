@@ -99,7 +99,7 @@ def nfnot(*args, **kwargs):
     return logical_not(*args, **kwargs)
 
 @gscript
-def none(gout, **kwargs):
+def allnodes(gout, **kwargs):
     """
     Return a boolean array selecting all nodes.
 
@@ -115,12 +115,12 @@ def none(gout, **kwargs):
     """
     return np.ones(gout[next(iter(gout))].shape, dtype=bool)
 
-@deprecated("Use none() instead")
+@deprecated("Use allnodes() instead")
 def nfiler_all(*args, **kwargs):
     """
-    Deprecated. Use `none()` instead.
+    Deprecated. Use `allnodes()` instead.
     """
-    return none(*args, **kwargs)
+    return allnodes(*args, **kwargs)
 
 @gscript
 def hosthalos(gout, key_is_isolated=ParamKeys.is_isolated, **kwargs):
@@ -129,7 +129,7 @@ def hosthalos(gout, key_is_isolated=ParamKeys.is_isolated, **kwargs):
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     key_is_isolated : str
         Key used to identify isolated halos.
@@ -155,7 +155,7 @@ def subhalos(gout, key_is_isolated=ParamKeys.is_isolated, **kwargs):
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     key_is_isolated : str
         Key used to identify isolated halos.
@@ -181,7 +181,7 @@ def interval(gout, min, max, key=None, getval=None, inclmin=True, inclmax=False,
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     min : float
         Lower bound of the interval.
@@ -223,7 +223,7 @@ def most_massive_progenitor(gout, key_mass_basic=ParamKeys.mass_basic, **kwargs)
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     key_mass_basic : str
         Key for the basic mass quantity.
@@ -233,7 +233,7 @@ def most_massive_progenitor(gout, key_mass_basic=ParamKeys.mass_basic, **kwargs)
     np.ndarray of bool
         Boolean mask selecting the node with the maximum mass.
     """
-    out = np.logical_not(none(gout,**kwargs))
+    out = np.logical_not(allnodes(gout,**kwargs))
     immp = np.argmax(gout[key_mass_basic])
     out[immp] = True
     return out
@@ -252,7 +252,7 @@ def withinrv(gout, key_rvir=ParamKeys.rvir, key_mass_basic=ParamKeys.mass_basic,
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     key_rvir : str
         Key for virial radius values.
@@ -285,7 +285,7 @@ def subhalos_valid(gout, mass_min, mass_max, key_mass=ParamKeys.mass,
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     mass_min : float
         Lower bound of the mass range.
@@ -329,7 +329,7 @@ def r3d(gout, rmin, rmax, **kwargs):
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     rmin : float
         Minimum 3D radius.
@@ -357,7 +357,7 @@ def r2d(gout, rmin, rmax, normvector, **kwargs):
 
     Parameters
     ----------
-    gout : Galacticus-like nodedata
+    gout : GalacticusNodes
         Galacticus like nodedata.
     rmin : float
         Minimum 2D radius.

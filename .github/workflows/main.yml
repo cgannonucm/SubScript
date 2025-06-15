@@ -84,6 +84,7 @@ jobs:
         run: |
           conda install conda-build anaconda-client
           conda config --set anaconda_upload no
+          conda activate
 
       - name: Build the conda package
         run: |

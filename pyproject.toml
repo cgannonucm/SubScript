@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 dependencies = ["numpy","pandas","scipy","h5py", "scikit-learn"]
-name = "subscript"
+name = "subhaloscript"
 version = "0.0.2"
 authors = [
   { name="Charles Gannon", email="cgannon@ucmerced.edu" },
@@ -14,13 +14,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Operating System :: POSIX :: Linux",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["subhaloscript"]
+packages = ["subscript"]
 
-[project.urls]
 "Homepage" = "https://github.com/cgannonucm/SubScript"
 "Bug Tracker" = "https://github.com/cgannonucm/SubScript"

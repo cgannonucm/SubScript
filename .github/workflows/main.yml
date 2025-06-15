@@ -71,16 +71,19 @@ jobs:
         shell: bash -el {0}
         
     steps:
-      - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Conda environment creation and activation
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: anaconda-client-env
-          python-version: 3.5
+          python-version: 3.11
+          auto-update-conda: false
           auto-activate-base: false
-      - run: |
-          conda info
-          conda list
-      - name: List directory
-        run: ls $CONDA/envs/anaconda-client-env/etc
-
+          show-channel-urls: true
+      - name: Build and upload the conda packages
+        uses: uibcdf/action-build-and-upload-conda-packages@v2.0.0
+        with:
+          meta_yaml_dir: meta.yaml# Replace with the path to your meta.yaml directory
+          user: cgannonucm # Replace with your Anaconda username (or an Anaconda organization username)
+          token: ${{ secrets.ANACONDA_API_TOKEN }} # Replace with the name of your Anaconda Token secret
 

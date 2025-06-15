@@ -2,8 +2,7 @@ name: Publish Python Package
 
 on:
   push:
-    tags:
-      - 'v*.*.*'  # Trigger on tags like v0.1.0
+    branches: [main]
 
 jobs:
   build-and-publish:

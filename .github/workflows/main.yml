@@ -66,36 +66,20 @@ jobs:
     name: Build and Upload Conda Package
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash -el {0}
+        
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Miniconda
-        uses: conda-incubator/setup-miniconda@v3
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: build-env
-          python-version: 3.11
-          auto-update-conda: true          
-          channels: conda-forge
-
-      - name: Install conda-build and dependencies
-        run: |
-          conda install conda-build anaconda-client
-          conda config --set anaconda_upload no
-        shell: bash -l {0}
-
-      - name: Build the conda package
-        run: |
-          conda-build .
-        shell: bash -l {0}
-
-      - name: Upload to Anaconda
-        env:
-          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
-        run: |
-          anaconda login --token $ANACONDA_API_TOKEN
-          anaconda upload $(conda-build . --output)
-        shell: bash -l {0}
-
-
+          activate-environment: anaconda-client-env
+          environment-file: etc/example-environment.yml
+          python-version: 3.5
+          condarc-file: etc/example-condarc.yml
+          auto-activate-base: false
+      - run: |
+          conda info
+          conda list
 

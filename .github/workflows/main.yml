@@ -80,6 +80,10 @@ jobs:
           auto-update-conda: false
           auto-activate-base: false
           show-channel-urls: true
+      - name: Install conda-build and anaconda-client
+        shell: bash -l {0}  # ⬅️ Ensures conda environment is activated
+        run: |
+          conda install conda-build anaconda-client
       - name: Build and upload the conda packages
         uses: uibcdf/action-build-and-upload-conda-packages@v1.4.0
         with:

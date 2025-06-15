@@ -79,6 +79,7 @@ jobs:
           channels: conda-forge
 
 
+
         
       - name: Install conda-build and dependencies
         run: |
@@ -91,18 +92,19 @@ jobs:
           echo "Current dir: $(pwd)"
           ls -la
         shell: bash -l {0}
-
-      - name: Build the conda package
-        run: |
-          conda-build .
-        shell: bash -l {0}
-
+        
       - name: Upload to Anaconda
         env:
           ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
         run: |
-          anaconda login --user cgannonucm --password $ANACONDA_API_TOKEN
+          conda install conda-token --name base
+          conda token set $ANACONDA_API_TOKEN 
           anaconda upload dist/*
+        shell: bash -l {0}
+
+      - name: Build the conda package
+        run: |
+          conda-build .
         shell: bash -l {0}
 
 

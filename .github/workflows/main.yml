@@ -33,9 +33,9 @@ jobs:
       - name: Run pytest
         run: pytest
 
-  build-and-publish:
+  build-pip:
     runs-on: ubuntu-latest
-    name: Build and Publish
+    name: Build and Publish in pypi Repository
     needs: test
     if: github.ref_type == 'branch' && github.ref_name == 'main'
 
@@ -61,4 +61,39 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: twine upload dist/*
+        
+  build-conda:
+    name: Build and Upload Conda Package
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref_type == 'branch' && github.ref_name == 'main'
 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: build-env
+          python-version: 3.11
+          auto-update-conda: true          
+          channels: conda-forge
+
+      - name: Install conda-build and dependencies
+        run: |
+          conda install conda-build anaconda-client
+          conda config --set anaconda_upload no
+        shell: bash -l {0}
+
+      - name: Build the conda package
+        run: conda-build .
+        shell: bash -l {0}
+
+      - name: Upload to Anaconda
+        env:
+          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        run: |
+          anaconda upload --user cgannonucm $(conda-build . --output)
+        shell: bash -l {0}

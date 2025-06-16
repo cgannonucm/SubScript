@@ -3,7 +3,7 @@ package:
   version: "0.1.0"
 
 source:
-  path: ../  # Or use `git_url`/`url` if not building from local files
+  path: .  # Or use `git_url`/`url` if not building from local files
 
 build:
   noarch: python
@@ -13,8 +13,10 @@ requirements:
   host:
     - python >=3.11
     - pip
+    - build
+    - hatchling
   run:
-    - python >=3.8
+    - python >=3.11
     - numpy
     - h5py
     - pandas

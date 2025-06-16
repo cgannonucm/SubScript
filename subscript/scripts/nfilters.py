@@ -116,7 +116,7 @@ def allnodes(gout, **kwargs):
     return np.ones(gout[next(iter(gout))].shape, dtype=bool)
 
 @deprecated("Use allnodes() instead")
-def nfiler_all(*args, **kwargs):
+def nfilter_all(*args, **kwargs):
     """
     Deprecated. Use `allnodes()` instead.
     """

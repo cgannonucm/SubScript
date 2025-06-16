@@ -1,6 +1,7 @@
 class Meta():
     cache = True
     """If true, use custom code when reading hdf5 to cache read data."""
+    disableDepreciatedWarning = False
 
 class ParamKeys():
     """Library of default galacticus parameters."""

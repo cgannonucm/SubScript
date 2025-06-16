@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+
 import numpy as np
 import h5py
 from numpy import testing
 
 from subscript.scripts.nfilters import nfilter_virialized, nfilter_halos, nfilter_subhalos, nfand, nfor, nfnot, nfilter_project2d
-from subscript.defaults import  ParamKeys
+from subscript.defaults import ParamKeys, Meta
+
+Meta.disableDepreciatedWarning = True
 
 def test_nfilter_halos():
     mockdata = {

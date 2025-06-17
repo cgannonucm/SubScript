@@ -53,12 +53,10 @@ def test_multi_proj():
     out_expected_yz = np.asarray((4, 3, 0), dtype=int)
 
     out_expected = np.mean(np.asarray((out_expected_xy, out_expected_xz, out_expected_yz)), axis=0)
-    print(out_expected)
 
     out = spatial2d_dn(mockdata, bins=bins, normvector=norm, summarize=True)
-    print(out)
-    out_actual, dn_r = out
 
+    out_actual, dn_r = out
 
     testing.assert_allclose(dn_r, bins)
     testing.assert_allclose(out_actual, out_expected) 
@@ -170,11 +168,45 @@ def test_multiproj():
 
 
 def test_multiproj_file():
+    # Test that combining multiple projections is the same as
+    # passing multiple projection vectors
     path_dmo    = "tests/data/test.hdf5"
     gout        = h5py.File(path_dmo)
 
     nfproj   = freeze(r2d, rmin=1E-1, rmax=2E-2)
-    n_actual = multiproj(nodecount, nfilter=nfproj)(gout, summarize=True, normvector=np.identity(3))
+
+    nv = np.identity(3)
+    n_actual = multiproj(nodecount, nfilter=nfproj)(gout, summarize=True, normvector=nv)
+
+    ncomb = []
+    ncomb += nodecount(gout, nfilter=nfproj, normvector=nv[0])
+    ncomb = nodecount(gout, nfilter=nfproj, normvector=nv[0])
+    ncomb = nodecount(gout, nfilter=nfproj, normvector=nv[0])
+
+    n_expected = np.mean(ncomb)
+
+    testing.assert_allclose(n_actual, n_expected)
+
+
+def test_multiproj_file():
+    # Test that projections are treated as trees in output shape
+    path_dmo    = "tests/data/test.hdf5"
+    gout        = h5py.File(path_dmo)
+
+    nfproj   = freeze(r2d, rmin=1E-1, rmax=2E-2)
+
+    nprojv = 6
+
+    nv = np.random.random(18).reshape(nprojv,3)
+    nproj = multiproj(nodecount, nfilter=nfproj)(gout, normvector=nv)
+
+    ntrees = len(nodecount(gout))
+
+    testing.assert_equal(len(nproj), ntrees * nprojv)
+
+
+
+
 
 def test_gscript_unfilter():
     # Ensure the expected behaviour occours when calling a script within a script

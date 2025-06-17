@@ -1,6 +1,6 @@
 package:
   name: subhaloscript
-  version: "1.0.2"
+  version: "1.0.3"
 
 source:
   path: .  # Or use `git_url`/`url` if not building from local files

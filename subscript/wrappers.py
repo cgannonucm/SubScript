@@ -6,6 +6,7 @@ from functools import reduce
 import numpy as np
 from numpy.typing import ArrayLike
 import h5py
+from copy import copy
 
 from subscript.util import is_arraylike
 from subscript.tabulatehdf5 import NodeProperties, tabulate_trees
@@ -27,6 +28,7 @@ def reduce_input(l, out=None):
     -------
     list of dict or UserDict
         Flattened list containing all dictionaries/UserDicts found in `l`.
+
     """
     if out is None:
         out = []
@@ -69,6 +71,32 @@ def format_nodedata(gout, out_index=-1)->Iterable[NodeProperties]:
     else:
         raise RuntimeError(f"Unrecognized data type for gout {type(gout)}")
     return _gout
+
+def _summarize(outs, summarize, statfuncs):
+    if summarize is None or not summarize:
+        return outs
+
+    _statfuncs = [np.mean, ] if statfuncs is None else statfuncs
+
+    if isinstance(outs[0], Iterable):
+        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
+        summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs]
+    else:
+        eval_stats = lambda f: f(np.asarray([treeo for treeo in outs]), axis=0)
+        summary = [eval_stats(f) for f in _statfuncs]
+    return summary
+
+
+# Eliminate lists of 1 item recursively
+def _format_out(o):
+    if (not isinstance(o, Iterable)) or (isinstance(o, str)):
+        return o
+    if len(o) == 1:
+        return _format_out(o[0])
+    out = [_format_out(i) for i in o]
+    if isinstance(o, np.ndarray):
+        return np.asarray(out)
+    return out
 
 def gscript(func):
     """
@@ -150,30 +178,9 @@ def gscript(func):
             _o = [o,] if single_out else o
             outs.append(_o)
 
-        # Eliminate lists of 1 item recursively
-        def format_out(o):
-            if (not isinstance(o, Iterable)) or (isinstance(o, str)):
-                return o
-            if len(o) == 1:
-                return format_out(o[0])
-            out = [format_out(i) for i in o]         
-            if isinstance(o, np.ndarray):
-                return np.asarray(out)
-            return out
+        summary = _summarize(outs, summarize=summarize, statfuncs=statfuncs)
 
-        if not summarize:
-            return format_out(outs)
-    
-        _statfuncs = [np.mean, ] if statfuncs is None else statfuncs
-
-        if isinstance(outs[0], Iterable):
-            eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
-            summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs] 
-        else:
-            eval_stats = lambda f: f(np.asarray([treeo for treeo in outs]), axis=0)
-            summary = [eval_stats(f) for f in _statfuncs] 
-
-        return format_out(summary)
+        return _format_out(summary)
     return wrap
 
 def gscript_proj(func):
@@ -208,27 +215,36 @@ def gscript_proj(func):
     """
     def wrap(gout, normvector, *args, **kwargs):
         normvector = np.asarray(normvector)
-        n = None
-
-        @gscript
-        def wrap_inner(gout, *args, normvector, **kwargs):
-            nonlocal n
-            v =  normvector
-            if n is not None:
-                v = normvector[n]
-                n += 1  
-                if n >= len(normvector):
-                    n = 0
-
-
-            return func(gout, *args, normvector=v, **kwargs)
-
 
         if normvector.ndim == 1:
-            return wrap_inner(gout, *args, normvector=normvector, **kwargs)
+            #raise NotImplementedError()
+            return gscript(func)(gout, *args, normvector=normvector, **kwargs)
+        if normvector.ndim > 2 or normvector.ndim <= 0:
+            raise RuntimeError(f'"normvector" must be either 1 or 2 dimensional')
 
-        n = 0
-        return wrap_inner([gout for _ in normvector], *args, normvector=normvector, **kwargs)
+        @gscript
+        def wrap_inner_main(gout, **kwargs):
+            n = gout.unfilter()['__custom_proj_iter__'][0]
+            return func(gout, *args, normvector=normvector[n], **kwargs)
+
+
+        ## This wrapped as well so we can call with None
+        def wrap_inner(gout, **kwargs2):
+            _gout = format_nodedata(gout)[0].unfilter()
+
+            _input = []
+            for n, _ in enumerate(normvector):
+                _in = copy(_gout)
+                _in.data = copy(_in.data)
+                _in.data['__custom_proj_iter__'] = n * np.ones(_in.data[next(_in.data.__iter__())].shape[0], dtype=int)
+                _input.append(_in)
+
+            return wrap_inner_main(_input, **(kwargs | kwargs2))
+
+        if gout is None:
+            return wrap_inner
+
+        return wrap_inner(gout)
 
     return wrap
 
@@ -267,5 +283,3 @@ def multiproj(func, nfilter):
         Function wrapped with `gscript_proj` and the node filter applied.
     """
     return gscript_proj(freeze(func, nfilter=nfilter))
-
-

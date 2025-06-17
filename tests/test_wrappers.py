@@ -53,8 +53,12 @@ def test_multi_proj():
     out_expected_yz = np.asarray((4, 3, 0), dtype=int)
 
     out_expected = np.mean(np.asarray((out_expected_xy, out_expected_xz, out_expected_yz)), axis=0)
-        
-    out_actual, dn_r = spatial2d_dn(mockdata, bins=bins, normvector=norm, summarize=True)
+    print(out_expected)
+
+    out = spatial2d_dn(mockdata, bins=bins, normvector=norm, summarize=True)
+    print(out)
+    out_actual, dn_r = out
+
 
     testing.assert_allclose(dn_r, bins)
     testing.assert_allclose(out_actual, out_expected) 
@@ -87,6 +91,44 @@ def test_gscript_proj_wrap():
     nfproj   = freeze(r2d, rmin=rmin, rmax=rmax)
  
     n_actual = gscript_proj(freeze(nodecount, nfilter=nfproj))(mockdata, summarize=True, normvector=normvectors)
+
+    testing.assert_allclose(n_actual, n_expected)
+
+    normvectors2 = ((1,0,0), (0,1,0), (0,0,1))
+
+    n_actual = gscript_proj(freeze(nodecount, nfilter=nfproj))(mockdata, summarize=True, normvector=normvectors2)
+
+    testing.assert_allclose(n_actual, n_expected)
+
+
+def test_gscript_proj_wrap_none():
+    test_x       = np.asarray((0.0, 0.25, 0.5       , 0.7       , 0.8        , 1.3, 1.4))
+    test_y       = np.asarray((0.0, 0.00, 0.5       , 0.3       , 0.9        , 0.0, 0.0))
+    test_z       = np.asarray((0.0, 0.00, 0.5       , 0.4       , 0.1        , 0.0, 0.0))
+
+    mockdata = {
+                    ParamKeys.x: test_x,
+                    ParamKeys.y: test_y,
+                    ParamKeys.z: test_z
+    }
+
+    r_xy_expected = np.asarray((0.0, 0.25, 0.70710678, 0.76157731, 1.20415946, 1.3, 1.4))
+    r_xz_expected = np.asarray((0.0, 0.25, 0.70710678, 0.80622577, 0.80622577, 1.3, 1.4))
+    r_yz_expected = np.asarray((0.0, 0.00, 0.70710678, 0.5       , 0.90553851, 0.0, 0.0))
+
+    rmin, rmax = 0.2, 0.71
+    normvectors = np.identity(3)
+
+    n_expected = (
+                   np.sum((r_xy_expected >= rmin) & (r_xy_expected <= rmax))
+                  +np.sum((r_xz_expected >= rmin) & (r_xz_expected <= rmax))
+                  +np.sum((r_yz_expected >= rmin) & (r_yz_expected <= rmax))
+                ) / 3
+
+    nfproj   = freeze(r2d, rmin=rmin, rmax=rmax)
+
+    frozentest = gscript_proj(freeze(nodecount, nfilter=nfproj))(None, summarize=True, normvector=normvectors)
+    n_actual = frozentest(mockdata)
 
     testing.assert_allclose(n_actual, n_expected)
 
@@ -208,4 +250,5 @@ def test_autofreeze():
                 testing.assert_allclose(f[key][_key][:], _val)       
 
 
-
+if __name__ == "__main__":
+    test_multi_proj()

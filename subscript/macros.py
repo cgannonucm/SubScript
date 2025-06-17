@@ -10,7 +10,7 @@ from numpy.dtypes import StringDType
 
 def macro_add(macros:dict[str, Callable], macro, label=None, **kwargs):
     """
-    Add a new macro function to an existing macros dictionary.
+    Add a new "script" to an existing macros dictionary.
 
     Parameters
     ----------

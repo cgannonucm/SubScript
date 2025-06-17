@@ -230,14 +230,15 @@ def gscript_proj(func):
 
         ## This wrapped as well so we can call with None
         def wrap_inner(gout, **kwargs2):
-            _gout = format_nodedata(gout)[0].unfilter()
+            _gout = format_nodedata(gout)
 
             _input = []
             for n, _ in enumerate(normvector):
                 _in = copy(_gout)
-                _in.data = copy(_in.data)
-                _in.data['__custom_proj_iter__'] = n * np.ones(_in.data[next(_in.data.__iter__())].shape[0], dtype=int)
-                _input.append(_in)
+                for i in _in:
+                    _i = copy(i)
+                    _i.data['__custom_proj_iter__'] = n * np.ones(i.data[next(i.data.__iter__())].shape[0], dtype=int)
+                    _input.append(_i)
 
             return wrap_inner_main(_input, **(kwargs | kwargs2))
 

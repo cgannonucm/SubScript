@@ -1,5 +1,5 @@
 # SubScript
-Utility functions for analyzing subhalo distributions, particularly from the Galacticus (https://github.com/galacticusorg/galacticus) galaxy formation model. 
+The ```subscript``` python package provides a library of ergonomic utility functions for analyzing Galacticus (https://github.com/galacticusorg/galacticus) subhalo data. 
 
 ## Installation 
 

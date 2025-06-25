@@ -1,5 +1,5 @@
 # SubScript
-Utility functions for analyzing subhalo distributions, focusing on the Galacticus (https://github.com/galacticusorg/galacticus) output format. The goal of this package is to facilitate quick statistical analysis of subhalo distributions across multiple trees.
+The ```subscript``` python package provides a library of ergonomic utility functions for analyzing Galacticus (https://github.com/galacticusorg/galacticus) subhalo data. 
 
 ## Installation 
 
@@ -8,3 +8,4 @@ Utility functions for analyzing subhalo distributions, focusing on the Galacticu
 
 ### Install via conda
 ```conda install cgannonucm::subhaloscript```
+

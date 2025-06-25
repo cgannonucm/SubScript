@@ -278,7 +278,7 @@ def nfilter_virialized(*args, **kwargs):
     return withinrv(*args, **kwargs)
 
 @gscript
-def subhalos_valid(gout, mass_min, mass_max, key_mass=ParamKeys.mass,
+def subhalos_valid(gout, mass_min=-np.inf, mass_max=np.inf, key_mass=ParamKeys.mass,
                    kwargs_nfilter_subhalos=None, kwargs_nfilter_virialized=None, kwargs_nfilter_range=None, **kwargs):
     """
     Select subhalos within the virial radius and a given mass range.

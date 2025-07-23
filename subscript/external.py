@@ -81,7 +81,7 @@ def symphony_to_galacticus_like_dict(sim_data, z_snap, key_map=KEY_MAP_SYMPHONY_
     out['custom_node_tree'] = tree_index * np.ones(nodecount, dtype=int)
 
     # The first halo is the host
-    out[ParamKeys.is_isolated] = np.ones(nodecount, dtype=int)
+    out[ParamKeys.is_isolated] = np.zeros(nodecount, dtype=int)
     out[ParamKeys.is_isolated][0] = 1
 
     return out

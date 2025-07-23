@@ -148,7 +148,7 @@ def test_symphony_conversion():
        1.8082767 , 0.44727923, 2.35697483, 1.44084725, 0.06581332])
     npt.assert_allclose(out[ParamKeys.z_lastisolated], z_lastisolated_expect)
 
-    iso_expect = np.ones(10, dtype=int)
+    iso_expect = np.zeros(10, dtype=int)
     iso_expect[0] = 1
     npt.assert_allclose(out[ParamKeys.is_isolated], iso_expect)
 
@@ -158,10 +158,3 @@ def test_symphony_conversion():
     tree_expect = 2 * np.ones(10, dtype=int)
     npt.assert_allclose(out['custom_node_tree'], tree_expect)
 
-
-
-
-
-
-if __name__ == '__main__':
-    test_symphony_conversion()

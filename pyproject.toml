@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 dependencies = ["numpy","pandas","scipy","h5py", "scikit-learn"]
 name = "subhaloscript"
-version = "1.0.7"
+version = "1.0.8"
 authors = [
   { name="Charles Gannon", email="cgannon@ucmerced.edu" },
 ]

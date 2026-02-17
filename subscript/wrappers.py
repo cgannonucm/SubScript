@@ -169,7 +169,7 @@ def gscript(func):
             elif is_arraylike(nfilter):
                 _nodefilter = np.asarray(nfilter, dtype=bool)
             else:
-                TypeError("Unrecognized type provided to nodefilter")
+                raise TypeError("Unrecognized type provided to nodefilter")
 
             _nodestree_filtered = _nodestree.filter(_nodefilter)
 

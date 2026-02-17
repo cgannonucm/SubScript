@@ -56,7 +56,7 @@ def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
                         
     return subhalo_data, zsnaps
  
-def track_subalo(subhalos_over_time, zsnaps, nodeindex, param_keys):
+def track_subhalo(subhalos_over_time, zsnaps, nodeindex, param_keys):
     """Filter subhalo time-series data to retain only non-isolated, bound snapshots. 
     Parameters
     ----------

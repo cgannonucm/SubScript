@@ -1,6 +1,6 @@
 # SubScript Function Reference
 
-Complete documentation of all functions in the SubScript library (v1.0.10), organized by module.
+Complete documentation of all functions in the SubScript library (v1.0.11), organized by module.
 
 **Last Updated:** 2026-02-18
 **Repository:** https://github.com/cgannonucm/SubScript
@@ -15,7 +15,7 @@ Complete documentation of all functions in the SubScript library (v1.0.10), orga
 4. [Spatial Projections](#spatial-projections) - `scripts/spatial.py`
 5. [Histograms & Distributions](#histograms--distributions) - `scripts/histograms.py`
 6. [Decorators & Wrappers](#decorators--wrappers) - `wrappers.py`
-7. [Time-Series Tracking](#time-series-tracking) - `tracking.py`
+7. [Time-Series Tracking](#time-series-tracking) - `tracking.py`, `subhalo_timeseries.py`
 8. [Batch Processing](#batch-processing) - `macros.py`
 9. [External Data Integration](#external-data-integration) - `external.py`
 10. [Utilities](#utilities) - `util.py`
@@ -1308,6 +1308,70 @@ plt.show()
 
 ---
 
+### subhalo_timeseries()
+
+**Module:** `subscript.subhalo_timeseries`
+
+**Signature:**
+```python
+def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int,
+                       refresh: bool = False) -> dict
+```
+
+**Description:**
+Convenience wrapper that extracts per-subhalo time-series data for **all** subhalos in a given merger tree and caches the result to disk. On subsequent calls with the same file and tree, the cached result is returned immediately unless `refresh=True`.
+
+**Parameters:**
+- `galacticus_hdf5` (h5py.File): Open Galacticus HDF5 output file
+- `tree_index` (int): Index of the merger tree to process
+- `refresh` (bool, optional): If True, bypass cache and recompute. Default is False.
+
+**Returns:**
+- dict: `{node_id (int): {'data': {param_key: np.ndarray}, 'zsnaps': np.ndarray}}`
+  - `data`: per-parameter time-series arrays filtered to satellite-only snapshots
+  - `zsnaps`: corresponding redshift array
+
+**Cache Behaviour:**
+- Cache file written to the same directory as the HDF5 file
+- Filename pattern: `{stem}-{sha256[:16]}-tree{tree_index}.pkl`
+- Cache is invalidated automatically when the file content changes (hash-based)
+
+**Requirements:**
+- Galacticus must be configured with `<nodeOperator value="indexShift" />`
+
+**Example:**
+```python
+import h5py
+import matplotlib.pyplot as plt
+from subscript.subhalo_timeseries import subhalo_timeseries
+from subscript.defaults import ParamKeys
+
+gout = h5py.File('galacticus.hdf5')
+
+# Load (or compute and cache) all subhalo time-series for tree 0
+result = subhalo_timeseries(gout, tree_index=0)
+
+# Force recompute
+result = subhalo_timeseries(gout, tree_index=0, refresh=True)
+
+# Plot bound-mass evolution for each tracked subhalo
+for node_id, ts in result.items():
+    plt.plot(ts['zsnaps'], ts['data'][ParamKeys.mass_bound], alpha=0.3)
+
+plt.xlabel('Redshift')
+plt.ylabel('Bound Mass [M☉]')
+plt.show()
+
+gout.close()
+```
+
+**Notes:**
+- Internally calls `track_subhalos()` then `track_subhalo()` for each node
+- Snapshots where the subhalo is a host halo or has `mass_bound ≤ 0` are removed
+- For large simulations the initial computation can be slow; cache makes reruns instant
+
+---
+
 ## Batch Processing
 
 ### macro_add()
@@ -1604,6 +1668,7 @@ Meta.disableDepreciatedWarning = True
 | `wrappers` | `freeze()` | Wrapper | Partial application |
 | `tracking` | `track_subhalos()` | Time-series | Extract time evolution |
 | `tracking` | `track_subhalo()` | Time-series | Filter to satellite phase |
+| `subhalo_timeseries` | `subhalo_timeseries()` | Time-series | Cached full-tree time-series extraction |
 | `macros` | `macro_run()` | Batch | Multi-file analysis |
 | `external` | `symphony_to_galacticus_like_dict()` | Integration | Convert Symphony data |
 

@@ -3,7 +3,7 @@
 **SubScript** is a Python library providing ergonomic utility functions for analyzing Galacticus semi-analytic model outputs. 
 
 **Repository:** https://github.com/cgannonucm/SubScript
-**Package:** `subhaloscript` (v1.0.10)
+**Package:** `subhaloscript` (v1.0.11)
 **Author:** Charles Gannon (cgannon@ucmerced.edu)
 
 ---
@@ -572,6 +572,43 @@ plt.plot(filtered_zsnaps, filtered_data[ParamKeys.mass_bound])
 plt.xlabel('Redshift')
 plt.ylabel('Bound Mass [M_☉]')
 ```
+
+### subhalo_timeseries() - Cached Full-Tree Time-Series
+
+Convenience wrapper that extracts and **caches** time-series for every subhalo in a tree:
+
+```python
+from subscript.subhalo_timeseries import subhalo_timeseries
+
+# Extract (or load from cache) all subhalo time-series for tree 0
+result = subhalo_timeseries(gout, tree_index=0)
+
+# Force recompute, ignoring cache
+result = subhalo_timeseries(gout, tree_index=0, refresh=True)
+
+# result structure:
+# result[node_id]['data']   -> dict of {param_key: time_series_array}
+# result[node_id]['zsnaps'] -> corresponding redshift array
+
+# Plot bound-mass evolution for a single subhalo
+import matplotlib.pyplot as plt
+from subscript.defaults import ParamKeys
+
+for node_id, ts in result.items():
+    plt.plot(ts['zsnaps'], ts['data'][ParamKeys.mass_bound])
+
+plt.xlabel('Redshift')
+plt.ylabel('Bound Mass [M_☉]')
+plt.show()
+```
+
+**Cache behaviour:**
+- Cache file is written to the same directory as the HDF5 file
+- Filename: `{stem}-{sha256[:16]}-tree{tree_index}.pkl`
+- Cache is invalidated automatically when the file content changes (hash-based)
+- Pass `refresh=True` to force recomputation
+
+**Requirements:** same as `track_subhalos()` — Galacticus must be run with `<nodeOperator value="indexShift" />`.
 
 ---
 

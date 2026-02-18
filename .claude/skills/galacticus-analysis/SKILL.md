@@ -831,7 +831,7 @@ result = subhalo_statistics(
 
 ## Units & Conventions
 
-- **Default coordinates**: Comoving (not physical)
+- **Default coordinates**: physical (not comoving)
 - **Distance**: Megaparsecs (Mpc) unless otherwise noted
 - **Mass**: Solar masses (M_☉)
 - **Time**: Gigayears (Gyr) or Billions of years
@@ -840,9 +840,6 @@ For cosmological conversions, use `colossus`:
 ```python
 from colossus.cosmology import cosmology
 cosmo = cosmology.setCosmology("planck18")
-
-# Convert comoving to physical distance
-physical_distance = comoving_distance / (1 + z)
 
 # Convert kpc to arcsec at redshift z
 rad_to_arcsec = 2.06E5
@@ -895,6 +892,22 @@ scikit-learn
 ---
 
 ## References
+
+### Comprehensive Function Reference
+
+📄 **`references/subscript_functions.md`**
+
+Complete documentation of all SubScript functions organized by module:
+- **Function signatures** with full parameter descriptions
+- **Return types** and data structures
+- **Usage examples** for each function
+- **Implementation notes** and performance considerations
+- **Complete parameter key reference** (50+ available properties)
+- **Summary table** of all functions by category
+
+Use this document for detailed function lookup and integration into custom analysis workflows.
+
+### Other Resources
 
 - **Public Repository**: https://github.com/cgannonucm/SubScript
 - **Galacticus**: https://github.com/galacticusorg/galacticus

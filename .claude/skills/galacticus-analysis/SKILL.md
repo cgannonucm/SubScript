@@ -516,7 +516,9 @@ result = projected_subhalo_count(gout, normvector=np.identity(3))
 
 ## Time-Series Analysis: Tracking
 
-Extract properties of individual subhalos across all Galacticus snapshots:
+Extract properties of individual subhalos across all Galacticus snapshots.
+
+> **Prefer `subhalo_timeseries()`** when extracting time-series for subhalos in a full tree. It wraps `track_subhalos()` + `track_subhalo()` with automatic disk caching, making repeated runs significantly faster. Use the lower-level `track_subhalos()` / `track_subhalo()` directly only when you need fine-grained control over which nodes to track or which parameters to extract.
 
 ### track_subhalos() - Extract Full Time-Series
 

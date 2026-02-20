@@ -1,6 +1,6 @@
 # SubScript Function Reference
 
-Complete documentation of all functions in the SubScript library (v1.1.0), organized by module.
+Complete documentation of all functions in the SubScript library (v1.1.1), organized by module.
 
 **Last Updated:** 2026-02-20
 **Repository:** https://github.com/cgannonucm/SubScript

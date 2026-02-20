@@ -4,7 +4,8 @@ This skill prepares SubScript for a GitHub release by:
 1. Updating the version number across configuration files
 2. Re-reading the repository to sync skill documentation
 3. Documenting any new functions in the function reference
-4. Committing changes with appropriate message
+4. Installing the package and running tests
+5. Committing changes with appropriate message
 
 ## Workflow
 
@@ -23,7 +24,16 @@ When invoked, this skill will:
    - Also update the Summary Table at the bottom of that file
    - If the function fits an existing section in `SKILL.md`, add a usage snippet there too
 6. **Update the `Last Updated` date** and version number at the top of `subscript_functions.md`
-7. **Stage and commit** all changed files
+7. **Install package** in the `.venv` virtual environment:
+   ```bash
+   .venv/bin/python -m pip install -e .
+   ```
+8. **Run tests** to verify everything passes:
+   ```bash
+   .venv/bin/python -m pytest
+   ```
+   - If any tests fail, fix the issues before proceeding to commit
+9. **Stage and commit** all changed files
 
 ## Files Updated
 
@@ -105,5 +115,7 @@ git push
 - Version format: `X.Y.Z` (semantic versioning)
 - **Always** update `subscript_functions.md` when new `.py` files appear in `subscript/`
 - The `Last Updated` date in `subscript_functions.md` should be set to today's date
+- **Always** use `.venv/bin/python` for pip install and pytest — do not use system Python or conda
+- All tests must pass before committing
 - **Changes are automatically committed** - no manual git commands needed
 - After commit, you only need to run `git push` to sync with GitHub

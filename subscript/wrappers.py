@@ -83,6 +83,7 @@ def _summarize(outs, summarize, statfuncs):
 
     def get_units(i):
         if isinstance(i, apu.Quantity):
+            print("Unit", i)
             return i.unit
         if isinstance(i, Iterable) and isinstance(i[0], apu.Quantity):
             return i[0].unit
@@ -91,8 +92,8 @@ def _summarize(outs, summarize, statfuncs):
 
     # Loop through the outputs for each tree, check if their is only one tree
     if isinstance(outs[0], Iterable):
-        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0) * get_units(outs[0][m])
-        summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs]
+        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
+        summary = [[eval_stats(f,m) * get_units(outs[m][0]) for m, _ in enumerate(outs[0])] for f in _statfuncs]
     else:
         eval_stats = lambda f: f(np.asarray([treeo for treeo in outs]), axis=0) * get_units(outs[0])
         summary = [eval_stats(f) for f in _statfuncs]

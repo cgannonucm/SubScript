@@ -10,9 +10,10 @@ from subscript.scripts.nodes import nodedata, nodecount
 from subscript.wrappers import freeze, gscript, gscript_proj, multiproj
 from subscript.scripts.nfilters import r2d, hosthalos
 from subscript.macros import macro_run, macro_write_out_hdf5
+from subscript.defaults import Meta
 
 
-
+Meta.units_enable = False
 
 def test_tabulate_multi_files():
     # Test the ability to tabulate multiple files
@@ -233,6 +234,8 @@ def test_gscript_unfilter():
     testscript(mock_data, nfilter=nfilter) 
 
 def test_autofreeze():
+    from subscript.defaults import Meta
+    Meta.units_enable = False
     path_dmo = "tests/data/test.hdf5"
     path_dmo2 = "tests/data/test-copy.hdf5"
     gout = h5py.File(path_dmo)
@@ -283,4 +286,4 @@ def test_autofreeze():
 
 
 if __name__ == "__main__":
-    test_multi_proj()
+    test_autofreeze()

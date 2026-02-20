@@ -48,6 +48,8 @@ def test_galacticus_units_si():
     # Distance conversion: m per Mpc
     testing.assert_allclose(float(units_si[ParamKeys.x]), 3.08567758135e+22, rtol=1e-2)
 
+    _disable_units()
+
 
 def test_enable_units_sets_meta():
     """enableUnitsFromGalacticus sets all Meta attributes correctly."""
@@ -219,6 +221,7 @@ def test_massfunction_summarize_with_units():
             val_yes = result_yes[i][j]
             val_yes_num = val_yes.value if isinstance(val_yes, apu.Quantity) else np.asarray(val_yes)
             testing.assert_allclose(val_yes_num, val_no, rtol=1e-2)
+    _disable_units()
 
 
 # ---------------------------------------------------------------------------
@@ -241,6 +244,8 @@ def test_nodecount_with_units():
     val_yes = count_yes.value if isinstance(count_yes, apu.Quantity) else count_yes
     testing.assert_allclose(np.asarray(val_yes).flatten(),
                             np.asarray(count_no).flatten(), rtol=1e-10)
+
+    _disable_units()
 
 
 # ---------------------------------------------------------------------------
@@ -265,19 +270,20 @@ def test_macro_run_with_units():
 
     gout.close()
     gout2.close()
-    _disable_units()
-
-    print(out_no.keys())
 
     for key in out_no:
         if key not in ['haloMass (mean)', 'haloMass (std)', 'z (mean)', 'z (std)']:
             continue
-        print(key)
             
         for subkey in out_no[key]:
             val_no = out_no[key][subkey]
             val_yes = out_yes[key][subkey]          
             testing.assert_allclose(np.asarray(val_yes), np.asarray(val_no), rtol=1e-2)
+    _disable_units()
+
+def test_finalize():
+    _disable_units()
 
 if __name__ == "__main__":
-    test_nodedata_summarize_with_units()
+    test_macro_run_with_units()
+

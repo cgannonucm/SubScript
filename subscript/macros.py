@@ -101,10 +101,7 @@ def macro_gen_runner(runner):
         
         macro_results = {}
         for key, val in results:
-            if isinstance(val, apu.Quantity):
-                val = val.value
             macro_results[key] = val
-
 
         out = {}
 
@@ -158,6 +155,13 @@ def macro_run(macros:dict[str, tuple[Callable, str]],
     for id, val in macro_results.items():
         n = np.where(id.encode("ascii", "ignore") == out["id"]["out0"])[0][0]
 
+        if isinstance(n, apu.Quantity):
+            print("Warning: n is an astropy Quantity, converting to value.")
+            n = n.value
+
+        if isinstance(val, apu.Quantity):
+            val = val.value
+
         for key, val in val.items():
             # Handles Single output
             _val = val
@@ -171,6 +175,8 @@ def macro_run(macros:dict[str, tuple[Callable, str]],
                     _shape = (nouts, *v.shape) if isinstance(v, np.ndarray) else nouts
                     out[key][key_out] = np.zeros(_shape)
 
+                if isinstance(v, apu.Quantity):
+                    v = v.value
                 out[key][key_out][n] = v
     return out
 

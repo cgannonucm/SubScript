@@ -3,7 +3,7 @@
 **SubScript** is a Python library providing ergonomic utility functions for analyzing Galacticus semi-analytic model outputs. 
 
 **Repository:** https://github.com/cgannonucm/SubScript
-**Package:** `subhaloscript` (v1.0.11)
+**Package:** `subhaloscript` (v1.1.0)
 **Author:** Charles Gannon (cgannon@ucmerced.edu)
 
 ---
@@ -101,10 +101,13 @@ ParamKeys.mass_halo_enclosed_current       # Enclosed mass within radius
 ### Structural Properties
 ```python
 ParamKeys.rvir                             # Virial radius
-ParamKeys.scale_radius                     # Scale radius (r_s) for density profile
+ParamKeys.scale_radius / ParamKeys.rscale  # Scale radius (r_s) for density profile
 ParamKeys.density_profile_radius           # Array of radii for density profile
 ParamKeys.density_profile                  # Array of densities at radii
 ParamKeys.concentration                    # Concentration parameter
+ParamKeys.tnfw_rt                          # Tidal truncation radius (truncated NFW)
+ParamKeys.tnfw_p0                          # Density normalization (truncated NFW)
+ParamKeys.dark_matter_profile_scale        # Dark matter profile scale
 ```
 
 ### Classification & Hierarchy
@@ -134,6 +137,7 @@ ParamKeys.node_index                       # Unique node identifier (with indexS
 ParamKeys.parent_index                     # Index of parent node
 ParamKeys.satellite_index                  # Index if this is a satellite
 ParamKeys.sibling_index                    # Index of sibling node
+ParamKeys.subsampling_weight               # Subsampling weight for node
 ```
 
 ### Tree Metadata
@@ -685,11 +689,83 @@ with h5py.File('analysis_results.hdf5', 'w') as f:
 ```python
 from subscript.defaults import Meta
 
-# Cache HDF5 reads in memory (default: True, faster but uses memory)
-Meta.cache = True
-
 # Disable deprecation warnings for old filter names
 Meta.disableDepreciatedWarning = False
+
+# Units system (see Astropy Units Integration below)
+Meta.units_enable = False          # Enable/disable astropy units (default: False)
+Meta.units_in_si = None            # Dict mapping keys → astropy SI units
+Meta.units_in_si_conversion = None # Dict mapping keys → numerical SI conversion factors
+Meta.unit_bases = [apu.Msun, apu.kpc, apu.Myr]  # Base units for decomposition
+```
+
+---
+
+## Astropy Units Integration
+
+SubScript supports optional astropy units on all node properties via `subscript.units`.
+
+### Quick Setup
+
+```python
+import h5py
+from subscript.units import enableUnitsFromGalacticus
+
+gout = h5py.File('galacticus.hdf5')
+
+# Read unitsInSI from the HDF5 file and enable units globally
+enableUnitsFromGalacticus(gout)
+
+# Now all nodedata() calls return astropy Quantities in the base unit system
+# Default bases: [Msun, kpc, Myr]
+```
+
+### Functions
+
+#### `galacticus_units_si(gal_out)` — Extract SI conversion factors
+
+Reads the `unitsInSI` attribute from every dataset in the final output's `nodeData` group and returns a dict of `{property_name: conversion_factor}`.
+
+```python
+from subscript.units import galacticus_units_si
+
+units_si = galacticus_units_si(gout)
+# units_si['basicMass'] → 1.989e30  (kg per unit stored in file)
+```
+
+#### `enableUnits(units_in_si_conversion, units_in_si=UNITS_IN_SI, base_units=Meta.unit_bases)` — Enable units manually
+
+```python
+from subscript.units import enableUnits, UNITS_IN_SI
+from subscript.units import galacticus_units_si
+
+conversion = galacticus_units_si(gout)
+enableUnits(conversion)
+# Meta.units_enable is now True; node properties return astropy Quantities
+```
+
+#### `enableUnitsFromGalacticus(galacticus_output, ...)` — Enable from file
+
+Convenience wrapper that calls `galacticus_units_si()` then `enableUnits()` in one step.
+
+### `UNITS_IN_SI` — Default unit map
+
+Pre-built dict mapping all `ParamKeys` to their astropy SI units:
+
+```python
+from subscript.units import UNITS_IN_SI
+from astropy import units as apu
+
+# Examples:
+# UNITS_IN_SI[ParamKeys.mass_basic]  → apu.kg
+# UNITS_IN_SI[ParamKeys.x]           → apu.m
+# UNITS_IN_SI[ParamKeys.rvir]        → apu.m
+# UNITS_IN_SI[ParamKeys.satellite_tidal_field] → 1/apu.s**2
+```
+
+When units are enabled, `NodeProperties.__getitem__` automatically converts values:
+```python
+out_quantity = (raw_value * conversion_factor * si_unit).decompose(base_units)
 ```
 
 ---
@@ -904,13 +980,6 @@ A: tracking.py requires Galacticus to output node indices consistently across sn
 <nodeOperator value="indexShift" />
 ```
 
-**Q: Memory issues with large files**
-A: Disable caching:
-```python
-from subscript.defaults import Meta
-Meta.cache = False
-```
-
 **Q: Deprecation warnings for old filter names**
 A: Use new filter names (e.g., `subhalos()` instead of `nfilter_subhalos()`)
 
@@ -926,6 +995,7 @@ pandas
 scipy
 h5py
 scikit-learn
+astropy
 ```
 
 ---

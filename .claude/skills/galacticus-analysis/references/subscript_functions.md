@@ -1,8 +1,8 @@
 # SubScript Function Reference
 
-Complete documentation of all functions in the SubScript library (v1.0.11), organized by module.
+Complete documentation of all functions in the SubScript library (v1.1.0), organized by module.
 
-**Last Updated:** 2026-02-18
+**Last Updated:** 2026-02-20
 **Repository:** https://github.com/cgannonucm/SubScript
 
 ---
@@ -18,7 +18,8 @@ Complete documentation of all functions in the SubScript library (v1.0.11), orga
 7. [Time-Series Tracking](#time-series-tracking) - `tracking.py`, `subhalo_timeseries.py`
 8. [Batch Processing](#batch-processing) - `macros.py`
 9. [External Data Integration](#external-data-integration) - `external.py`
-10. [Utilities](#utilities) - `util.py`
+10. [Units Integration](#units-integration) - `units.py`
+11. [Utilities](#utilities) - `util.py`
 
 ---
 
@@ -61,8 +62,8 @@ current_filter = node_props.get_filter()
 
 **Notes:**
 - Lazy loads from h5py.Dataset on first access
-- Caching controlled by `subscript.defaults.Meta.cache`
 - Supports slicing with `_startn` and `_stopn` for tree separation
+- When `Meta.units_enable = True`, data is automatically converted to astropy Quantities
 
 ---
 
@@ -1626,20 +1627,155 @@ is_arraylike("string")        # False (ambiguous)
 **Module:** `subscript.defaults`
 
 **Attributes:**
-- `cache` (bool): Cache HDF5 reads in memory (default: True)
-  - True: Faster but uses more memory
-  - False: Slower but lower memory footprint
 - `disableDepreciatedWarning` (bool): Suppress deprecation warnings (default: False)
+- `units_enable` (bool): Enable astropy unit conversion on data access (default: False)
+- `units_in_si` (dict | None): Maps ParamKeys → astropy SI units (set by `enableUnits()`)
+- `units_in_si_conversion` (dict | None): Maps ParamKeys → numerical SI conversion factors from HDF5
+- `unit_bases` (list): Astropy base units for decomposition (default: `[Msun, kpc, Myr]`)
 
 **Example:**
 ```python
 from subscript.defaults import Meta
 
-# Disable caching for large files
-Meta.cache = False
-
 # Suppress old function name warnings
 Meta.disableDepreciatedWarning = True
+
+# Units are managed via subscript.units (see Units Integration section)
+# Do not set units_* attributes directly; use enableUnits() / enableUnitsFromGalacticus()
+```
+
+---
+
+---
+
+## Units Integration
+
+**Module:** `subscript.units`
+
+Provides optional astropy unit support for all node properties. When enabled, `NodeProperties.__getitem__` returns astropy `Quantity` objects instead of raw numpy arrays, automatically converting from the file's stored units to the requested base unit system.
+
+---
+
+### `UNITS_IN_SI`
+
+**Type:** `dict`
+
+Pre-built dictionary mapping all `ParamKeys` to their corresponding astropy SI units.
+
+**Selected entries:**
+```python
+from subscript.units import UNITS_IN_SI
+from subscript.defaults import ParamKeys
+from astropy import units as apu
+
+UNITS_IN_SI[ParamKeys.x]           # apu.m
+UNITS_IN_SI[ParamKeys.mass_basic]  # apu.kg
+UNITS_IN_SI[ParamKeys.rvir]        # apu.m
+UNITS_IN_SI[ParamKeys.satellite_tidal_field]          # 1/apu.s**2
+UNITS_IN_SI[ParamKeys.satellite_tidal_heating_normalized]  # apu.kg/apu.s**2
+UNITS_IN_SI[ParamKeys.basic_time_last_isolated]       # apu.s
+UNITS_IN_SI[ParamKeys.dark_matter_velocity_virial]    # apu.m/apu.s
+UNITS_IN_SI[ParamKeys.spin_angular_momentum]          # apu.dimensionless_unscaled
+UNITS_IN_SI[ParamKeys.is_isolated]                    # apu.dimensionless_unscaled
+```
+
+---
+
+### `galacticus_units_si()`
+
+**Signature:**
+```python
+def galacticus_units_si(gal_out: h5py.File) -> dict
+```
+
+**Description:**
+Reads the `unitsInSI` attribute from every dataset in the final output's `nodeData` group and returns a dict of `{property_name: conversion_factor}`.
+
+**Parameters:**
+- `gal_out` (h5py.File): Open Galacticus HDF5 file
+
+**Returns:**
+- dict: `{node_property_name (str): units_in_si (float)}` — numerical factor to multiply to convert stored values to SI
+
+**Example:**
+```python
+from subscript.units import galacticus_units_si
+import h5py
+
+gout = h5py.File('galacticus.hdf5')
+conversion = galacticus_units_si(gout)
+# conversion['basicMass'] → 1.989e30  (stored values * factor = kg)
+```
+
+**Notes:**
+- Uses `get_galacticus_outputs()` to find the last output index
+- Defaults to `"1.0"` if `unitsInSI` attribute is missing on a dataset
+
+---
+
+### `enableUnits()`
+
+**Signature:**
+```python
+def enableUnits(units_in_si_conversion: dict,
+                units_in_si: dict = UNITS_IN_SI,
+                base_units: list = Meta.unit_bases) -> None
+```
+
+**Description:**
+Enable astropy units globally by setting the `Meta` unit attributes. After calling this, all `NodeProperties` data access returns astropy `Quantity` objects decomposed into `base_units`.
+
+**Parameters:**
+- `units_in_si_conversion` (dict): Numerical conversion factors (from `galacticus_units_si()`)
+- `units_in_si` (dict): Astropy SI unit map (default: `UNITS_IN_SI`)
+- `base_units` (list): Base units for decomposition (default: `[Msun, kpc, Myr]`)
+
+**Side Effects:**
+Sets `Meta.units_enable = True`, `Meta.units_in_si`, `Meta.unit_bases`, `Meta.units_in_si_conversion`.
+
+**Example:**
+```python
+from subscript.units import enableUnits, galacticus_units_si
+import h5py
+
+gout = h5py.File('galacticus.hdf5')
+conversion = galacticus_units_si(gout)
+enableUnits(conversion)
+# Now Meta.units_enable = True
+```
+
+---
+
+### `enableUnitsFromGalacticus()`
+
+**Signature:**
+```python
+def enableUnitsFromGalacticus(galacticus_output: h5py.File,
+                               units_in_si: dict = UNITS_IN_SI,
+                               base_units: list = Meta.unit_bases) -> None
+```
+
+**Description:**
+Convenience wrapper: calls `galacticus_units_si()` then `enableUnits()` in one step.
+
+**Parameters:**
+- `galacticus_output` (h5py.File): Open Galacticus HDF5 file
+- `units_in_si` (dict): Astropy SI unit map (default: `UNITS_IN_SI`)
+- `base_units` (list): Base units for decomposition
+
+**Example:**
+```python
+import h5py
+from subscript.units import enableUnitsFromGalacticus
+from subscript.scripts.nodes import nodedata
+from subscript.defaults import ParamKeys
+
+gout = h5py.File('galacticus.hdf5')
+enableUnitsFromGalacticus(gout)
+
+# Returns Quantity in kpc (base unit system)
+rvir = nodedata(gout, key=ParamKeys.rvir)[0]
+print(rvir)  # [0.23 0.31 ...] kpc
 ```
 
 ---
@@ -1671,4 +1807,8 @@ Meta.disableDepreciatedWarning = True
 | `subhalo_timeseries` | `subhalo_timeseries()` | Time-series | Cached full-tree time-series extraction |
 | `macros` | `macro_run()` | Batch | Multi-file analysis |
 | `external` | `symphony_to_galacticus_like_dict()` | Integration | Convert Symphony data |
+| `units` | `enableUnitsFromGalacticus()` | Units | Enable astropy units from HDF5 file |
+| `units` | `enableUnits()` | Units | Enable astropy units manually |
+| `units` | `galacticus_units_si()` | Units | Extract SI conversion factors from HDF5 |
+| `units` | `UNITS_IN_SI` | Units | Default ParamKeys → astropy unit map |
 

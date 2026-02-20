@@ -7,6 +7,7 @@ from subscript.tabulatehdf5 import NodeProperties, tabulate_trees
 from subscript.wrappers import freeze
 from datetime import datetime
 from numpy.dtypes import StringDType
+from astropy import units as apu
 
 def macro_add(macros:dict[str, Callable], macro, label=None, **kwargs):
     """
@@ -97,7 +98,14 @@ def macro_gen_runner(runner):
     """
     def macro_runner(macros:dict[str, Callable],  gouts:Iterable[(h5py.File)], statfuncs)->dict:
         results = runner(gouts, macros, statfuncs)
-        macro_results = {key:val for key, val in results}
+        
+        macro_results = {}
+        for key, val in results:
+            if isinstance(val, apu.Quantity):
+                val = val.value
+            macro_results[key] = val
+
+
         out = {}
 
         for _id, vals in macro_results.items():

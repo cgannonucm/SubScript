@@ -7,6 +7,7 @@ from collections import UserDict
 from subscript.defaults import ParamKeys
 from copy import copy
 from subscript.defaults import Meta
+from astropy import units as apu
 
 class NodeProperties(UserDict):
     """
@@ -77,29 +78,39 @@ class NodeProperties(UserDict):
         return np.ones(self.data[next(self.data.__iter__())].shape[0], dtype=bool)
 
     def __getitem__(self, key): 
-        # Allow for providing a set of keys
+        # Allow for providing a list of keys
         if not isinstance(key, str):
             return [self[_key] for _key in key] 
 
         val = self.data[key]
+
         if isinstance(val, np.ndarray): 
             out = val
         elif isinstance(val, h5py.Dataset):
-            _val = val[self._startn:self._stopn]
-            if Meta.cache: 
-                self.data[key] = _val
-            out = _val
+            out = val[self._startn:self._stopn]
         elif isinstance(val, Callable):
-            _val = val()[self._startn:self._stopn]
-            if Meta.cache:
-                self.data[key] = _val
-            out = _val
+            out = val()[self._startn:self._stopn]
         else:
             raise RuntimeError("Unrecognized Type") 
 
         if self._nodefilter is None:
+            return NodeProperties.convert_units(key, out)
+
+        return NodeProperties.convert_units(key, out[self._nodefilter])
+
+    @staticmethod
+    def convert_units(key, out): 
+        if not Meta.units_enable:
             return out
-        return out[self._nodefilter] 
+
+        if isinstance(out, apu.Quantity):
+            return out.decompose(Meta.unit_bases)
+
+        if key in Meta.units_in_si and key in Meta.units_in_si_conversion:
+            return (out * Meta.units_in_si_conversion[key] * Meta.units_in_si[key]).decompose(Meta.unit_bases)
+        
+        return out * apu.dimensionless_unscaled
+
                 
 def get_galacticus_outputs(galout:h5py.File)->np.ndarray[int]:
     """

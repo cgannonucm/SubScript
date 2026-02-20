@@ -1,7 +1,4 @@
-class Meta():
-    cache = True
-    """If true, use custom code when reading hdf5 to cache read data."""
-    disableDepreciatedWarning = False
+from astropy import units as apu    
 
 class ParamKeys():
     """Library of default galacticus parameters."""
@@ -14,6 +11,7 @@ class ParamKeys():
     mass = 'basicMass'
     mass_bound = 'satelliteBoundMass'
     rvir = 'darkMatterOnlyRadiusVirial'
+    rscale = 'darkMatterProfileScaleRadius'
     mass_basic = 'basicMass'
     is_isolated = 'nodeIsIsolated'
     hierarchylevel = 'nodeHierarchyLevel'
@@ -59,3 +57,29 @@ class ParamKeys():
     spin_angular_momentum_vector_x = 'spinAngularMomentumVectorX'
     spin_angular_momentum_vector_y = 'spinAngularMomentumVectorY'
     spin_angular_momentum_vector_z = 'spinAngularMomentumVectorZ'
+    
+class Meta(): 
+    disableDepreciatedWarning = False
+    """If true, disable the warning about depreciated code."""
+
+    units_enable = False
+    """If true, use astropy units when reading data."""
+
+    units_in_si = None
+    """Dictionary mapping parameter keys to their corresponding astropy units in SI."""   
+
+    units_in_si_conversion = None
+    """Dictionary mapping parameter keys to a numerical value that converts the nodeProperty to an SI unit."""
+
+    unit_bases = [apu.Msun, apu.Mpc, apu.Myr]
+    """List of astropy units to use as bases for unit conversions."""
+
+    disable_auto_format_scalar = False
+    """
+    If a function only outputs a single single value in an array per tree, 
+    Ie [[1.0], [1.0], [1.0]], then automatically convert to a 1d array, Ie [1.0, 1.0, 1.0].
+    If true, disable this automatic formatting. 
+    WARNING: This may be set to true in the future, but is currently not recommended to set to true as it may cause unexpected output formats.
+    For new code use disable_auto_format_scalar = True and explicitly format the output as needed.
+    """
+

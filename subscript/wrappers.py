@@ -7,6 +7,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 import h5py
 from copy import copy
+from astropy import units as apu    
+from subscript.defaults import Meta
 
 from subscript.util import is_arraylike
 from subscript.tabulatehdf5 import NodeProperties, tabulate_trees
@@ -76,26 +78,67 @@ def _summarize(outs, summarize, statfuncs):
     if summarize is None or not summarize:
         return outs
 
-    _statfuncs = [np.mean, ] if statfuncs is None else statfuncs
+    _statfuncs = [np.mean, ] if statfuncs is None else statfuncs 
 
+
+    def get_units(i):
+        if isinstance(i, apu.Quantity):
+            return i.unit
+        if isinstance(i, Iterable) and isinstance(i[0], apu.Quantity):
+            return i[0].unit
+        else:
+            return 1.0
+
+    # Loop through the outputs for each tree, check if their is only one tree
     if isinstance(outs[0], Iterable):
-        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0)
+        eval_stats = lambda f,m: f(np.asarray([treeo[m] for treeo in outs]), axis=0) * get_units(outs[0][m])
         summary = [[eval_stats(f,m) for m, _ in enumerate(outs[0])] for f in _statfuncs]
     else:
-        eval_stats = lambda f: f(np.asarray([treeo for treeo in outs]), axis=0)
+        eval_stats = lambda f: f(np.asarray([treeo for treeo in outs]), axis=0) * get_units(outs[0])
         summary = [eval_stats(f) for f in _statfuncs]
     return summary
 
 
-# Eliminate lists of 1 item recursively
 def _format_out(o):
+
     if (not isinstance(o, Iterable)) or (isinstance(o, str)):
         return o
-    if len(o) == 1:
+
+    if isinstance(o, apu.Quantity) and o.isscalar:
+        return o.value * o.unit
+
+    if len(o) == 1 and not isinstance(o, apu.Quantity):
         return _format_out(o[0])
+
+    if isinstance(o, apu.Quantity) and len(o.value) == 1:
+        return _format_out(o[0])     
+
     out = [_format_out(i) for i in o]
+
+    # If all outputs are scalar quantities with the same unit, return a single quantity with that unit
+    if isinstance(out[0], apu.Quantity):
+        sameunits = True
+        unit = out[0].unit
+        for i in out:
+            if not isinstance(i, apu.Quantity):
+                sameunits = False
+                break
+            if not i.isscalar:
+                sameunits = False
+                break
+            if not i.unit.is_equivalent(unit):
+                sameunits = False
+                break
+        if sameunits:
+            return [i.value for i in out] * out[0].unit
+
+    if isinstance(o, apu.Quantity):
+        return o
+
     if isinstance(o, np.ndarray):
         return np.asarray(out)
+
+
     return out
 
 def gscript(func):
@@ -180,6 +223,9 @@ def gscript(func):
 
         summary = _summarize(outs, summarize=summarize, statfuncs=statfuncs)
 
+        if Meta.disable_auto_format_scalar:
+            return summary
+        
         return _format_out(summary)
     return wrap
 

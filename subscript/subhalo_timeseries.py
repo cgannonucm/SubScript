@@ -19,7 +19,7 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
 
     Retrieves all subhalo node IDs at the last snapshot of the given tree, runs
     track_subhalos across all snapshots, then filters each subhalo's time-series
-    via track_subhalo (removing isolated/unbound snapshots). Results are cached
+    via track_subhalo (removing isolated). Results are cached
     to disk using pickle.
 
     Parameters

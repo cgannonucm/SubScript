@@ -33,7 +33,10 @@ When invoked, this skill will:
    .venv/bin/python -m pytest
    ```
    - If any tests fail, fix the issues before proceeding to commit
-9. **Stage and commit** all changed files
+9. **Draft a commit message** and present it to the user using `AskUserQuestion`, offering options:
+   - "Use as-is" — commit with the drafted message
+   - "Edit message" — let the user provide a custom message
+10. **Stage and commit** all changed files with the finalized message
 
 ## Files Updated
 
@@ -97,7 +100,8 @@ After updating all files, the skill will automatically:
      .claude/skills/galacticus-analysis/references/subscript_functions.md \
      subscript/<new_module>.py   # any new source files
    ```
-3. **Create commit** with semantic message:
+3. **Present the drafted commit message** to the user via `AskUserQuestion` with options to use it as-is or provide a custom message
+4. **Create commit** with the finalized message:
    ```bash
    git commit -m "Bump version to X.Y.Z and add <module> module"
    ```

@@ -3,7 +3,7 @@
 **SubScript** is a Python library providing ergonomic utility functions for analyzing Galacticus semi-analytic model outputs. 
 
 **Repository:** https://github.com/cgannonucm/SubScript
-**Package:** `subhaloscript` (v1.1.1)
+**Package:** `subhaloscript` (v1.1.2)
 **Author:** Charles Gannon (cgannon@ucmerced.edu)
 
 ---

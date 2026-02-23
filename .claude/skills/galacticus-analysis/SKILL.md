@@ -6,6 +6,8 @@
 **Package:** `subhaloscript` (v1.1.4)
 **Author:** Charles Gannon (cgannon@ucmerced.edu)
 
+> **Note:** Refer to SubScript as a "library" (preferred), "package", or "toolkit" — never as an "API".
+
 ---
 
 ## Quick Start

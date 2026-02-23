@@ -24,19 +24,22 @@ When invoked, this skill will:
    - Also update the Summary Table at the bottom of that file
    - If the function fits an existing section in `SKILL.md`, add a usage snippet there too
 6. **Update the `Last Updated` date** and version number at the top of `subscript_functions.md`
-7. **Install package** in the `.venv` virtual environment:
+7. **If new features were detected** (new functions, new parameters, changed signatures), ask the user via `AskUserQuestion`:
+   - "Yes" — write tests for the new features in the appropriate `tests/test_*.py` file, following the existing test style (mock data dicts, `numpy.testing.assert_equal`, etc.)
+   - "No" — skip test writing
+8. **Install package** in the `.venv` virtual environment:
    ```bash
    .venv/bin/python -m pip install -e .
    ```
-8. **Run tests** to verify everything passes:
+9. **Run tests** to verify everything passes:
    ```bash
    .venv/bin/python -m pytest
    ```
    - If any tests fail, fix the issues before proceeding to commit
-9. **Draft a commit message** and present it to the user using `AskUserQuestion`, offering options:
-   - "Use as-is" — commit with the drafted message
-   - "Edit message" — let the user provide a custom message
-10. **Stage and commit** all changed files with the finalized message
+10. **Draft a commit message** and present it to the user using `AskUserQuestion`, offering options:
+    - "Use as-is" — commit with the drafted message
+    - "Edit message" — let the user provide a custom message
+11. **Stage and commit** all changed files with the finalized message
 
 ## Files Updated
 
@@ -111,6 +114,15 @@ You can then push to GitHub:
 ```bash
 git push
 ```
+
+## Test Writing
+
+When the user opts to write tests for new features:
+
+- Add tests to the existing `tests/test_<module>.py` file that corresponds to the changed module (e.g., changes in `nfilters.py` → `tests/test_nfilters.py`)
+- Follow the existing test style: mock data dicts, `numpy.testing.assert_equal`, simple assertions
+- Test new parameters, new functions, and edge cases (e.g., shape mismatches raising `ValueError`)
+- Include the new test file in the staged files for the commit
 
 ## Implementation Notes
 

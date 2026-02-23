@@ -43,11 +43,11 @@ def test_nfilter_logical_and():
     out_expected = np.zeros(5, dtype=bool)
     testing.assert_equal(out_actual, out_expected)
 
-def test_nfilter_logical_and():
+def test_nfilter_logical_or():
     mockdata = {
                 "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
                }
- 
+
     test = logical_or(hosthalos, subhalos)
     out_actual = test(mockdata)
     out_expected = np.ones(5, dtype=bool)
@@ -116,3 +116,69 @@ def test_nfilter_project2d():
     testing.assert_equal(filter_actual, filter_expected)
 
 
+def test_logical_and_varargs():
+    mockdata = {
+                "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
+               }
+
+    # Three callable args
+    test = logical_and(hosthalos, hosthalos, hosthalos)
+    out_actual = test(mockdata)
+    out_expected = hosthalos(mockdata)
+    testing.assert_equal(out_actual, out_expected)
+
+    # Mix of callables and arrays
+    test = logical_and(hosthalos, hosthalos(mockdata), subhalos)
+    out_actual = test(mockdata)
+    out_expected = np.zeros(5, dtype=bool)
+    testing.assert_equal(out_actual, out_expected)
+
+    # Four args: all True AND hosthalos AND subhalos → all False
+    all_true = np.ones(5, dtype=bool)
+    test = logical_and(hosthalos, subhalos, all_true)
+    out_actual = test(mockdata)
+    out_expected = np.zeros(5, dtype=bool)
+    testing.assert_equal(out_actual, out_expected)
+
+
+def test_logical_or_varargs():
+    mockdata = {
+                "nodeIsIsolated": np.asarray((1.0, 0.0, 1.0, 1.0, 0.0))
+               }
+
+    # Three callable args: hosthalos OR subhalos OR hosthalos → all True
+    test = logical_or(hosthalos, subhalos, hosthalos)
+    out_actual = test(mockdata)
+    out_expected = np.ones(5, dtype=bool)
+    testing.assert_equal(out_actual, out_expected)
+
+    # All-false array OR hosthalos → hosthalos
+    all_false = np.zeros(5, dtype=bool)
+    test = logical_or(all_false, all_false, hosthalos)
+    out_actual = test(mockdata)
+    out_expected = hosthalos(mockdata)
+    testing.assert_equal(out_actual, out_expected)
+
+
+def test_logical_and_shape_mismatch():
+    a = np.ones(5, dtype=bool)
+    b = np.ones(3, dtype=bool)
+
+    test = logical_and(a, a, b)
+    try:
+        test()
+        assert False, "Expected ValueError"
+    except ValueError:
+        pass
+
+
+def test_logical_or_shape_mismatch():
+    a = np.ones(5, dtype=bool)
+    b = np.ones(3, dtype=bool)
+
+    test = logical_or(a, a, b)
+    try:
+        test()
+        assert False, "Expected ValueError"
+    except ValueError:
+        pass

@@ -1,6 +1,6 @@
 # SubScript Function Reference
 
-Complete documentation of all functions in the SubScript library (v1.1.3), organized by module.
+Complete documentation of all functions in the SubScript library (v1.1.4), organized by module.
 
 **Last Updated:** 2026-02-23
 **Repository:** https://github.com/cgannonucm/SubScript
@@ -542,15 +542,15 @@ valid_mass = nodedata(gout, ParamKeys.mass_bound, nfilter=valid_filter)
 ```python
 def logical_and(arg1: (np.ndarray[bool] | Callable),
                 arg2: (np.ndarray[bool] | Callable),
-                args: Iterable[(np.ndarray[bool] | Callable)] = None) → Callable
+                *args: (np.ndarray[bool] | Callable)) → Callable
 ```
 
-**Description:** Create logical AND of two or more filters or boolean arrays. Supports variadic additional arguments via the `args` parameter.
+**Description:** Create logical AND of two or more filters or boolean arrays. Accepts any number of additional positional arguments.
 
 **Parameters:**
 - `arg1` (np.ndarray[bool] | Callable): First condition
 - `arg2` (np.ndarray[bool] | Callable): Second condition
-- `args` (Iterable, optional): Additional conditions to AND together
+- `*args` (np.ndarray[bool] | Callable): Additional conditions to AND together
 
 ```python
 from subscript.scripts.nfilters import logical_and, subhalos, r3d, interval
@@ -559,11 +559,11 @@ from subscript.scripts.nfilters import logical_and, subhalos, r3d, interval
 inner_subhalos = logical_and(subhalos, r3d(None, 0, 0.1))
 mass = nodedata(gout, ParamKeys.mass_bound, nfilter=inner_subhalos)
 
-# Combine three or more filters via args
+# Combine three or more filters as positional args
 combined = logical_and(
     subhalos,
     r3d(None, 0, 0.1),
-    args=[interval(None, 1e9, 1e12, key=ParamKeys.mass_bound)]
+    interval(None, 1e9, 1e12, key=ParamKeys.mass_bound)
 )
 ```
 
@@ -579,15 +579,15 @@ combined = logical_and(
 ```python
 def logical_or(arg1: (np.ndarray[bool] | Callable),
                arg2: (np.ndarray[bool] | Callable),
-               args: Iterable[(np.ndarray[bool] | Callable)] = None) → Callable
+               *args: (np.ndarray[bool] | Callable)) → Callable
 ```
 
-**Description:** Create logical OR of two or more filters or boolean arrays. Supports variadic additional arguments via the `args` parameter.
+**Description:** Create logical OR of two or more filters or boolean arrays. Accepts any number of additional positional arguments.
 
 **Parameters:**
 - `arg1` (np.ndarray[bool] | Callable): First condition
 - `arg2` (np.ndarray[bool] | Callable): Second condition
-- `args` (Iterable, optional): Additional conditions to OR together
+- `*args` (np.ndarray[bool] | Callable): Additional conditions to OR together
 
 ```python
 # Nodes either in inner region OR above mass threshold
@@ -596,12 +596,8 @@ inner_or_massive = logical_or(
     interval(None, 1e11, np.inf, key=ParamKeys.mass_bound)
 )
 
-# Three or more conditions
-any_match = logical_or(
-    filter1,
-    filter2,
-    args=[filter3, filter4]
-)
+# Three or more conditions as positional args
+any_match = logical_or(filter1, filter2, filter3, filter4)
 ```
 
 **Notes:**

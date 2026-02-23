@@ -9,7 +9,7 @@ from subscript.wrappers import gscript
 from subscript.defaults import ParamKeys
 from subscript.util import deprecated
 
-def logical_or(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable), args:Iterable[(np.ndarray[bool] | Callable)]=None):
+def logical_or(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable), *args:(np.ndarray[bool] | Callable)):
     """
     Create a logical OR function from two nodefilters or boolean arrays.
 
@@ -26,7 +26,6 @@ def logical_or(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Ca
     Callable
         A function that returns the element-wise logical OR arg1, arg2, and all additional args when called.
     """
-    args = [] if args is None else args
 
     def eval_or(*a, **k):
         _args = [arg1, arg2] + list(args)
@@ -56,7 +55,7 @@ def nfor(*args, **kwargs):
     """
     return logical_or(*args, **kwargs)
 
-def logical_and(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable), args:Iterable[(np.ndarray[bool] | Callable)]=None):
+def logical_and(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable), *args: (np.ndarray[bool] | Callable)):
     """
     Create a logical AND function from two nodefilters or boolean arrays.
 
@@ -72,7 +71,6 @@ def logical_and(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | C
     Callable
         A function that returns the element-wise logical AND of `arg1` and `arg2` and any aditional args when called.
     """
-    args = [] if args is None else args
     def eval_and(*a, **k):
         _args = [arg1, arg2] + list(args)
         _arg_eval = None

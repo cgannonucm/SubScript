@@ -2,14 +2,14 @@
 import numpy as np
 import numpy.testing
 import h5py
-from typing import Callable
+from typing import Callable, Iterable
 
 from subscript.scripts.spatial import project3d, project2d
 from subscript.wrappers import gscript
 from subscript.defaults import ParamKeys
 from subscript.util import deprecated
 
-def logical_or(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable)):
+def logical_or(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable), args:Iterable[(np.ndarray[bool] | Callable)]=None):
     """
     Create a logical OR function from two nodefilters or boolean arrays.
 
@@ -19,19 +19,35 @@ def logical_or(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Ca
         First condition array or callable returning a boolean array.
     arg2 : np.ndarray of bool or Callable
         Second condition array or callable returning a boolean array.
+    args : Iterable of np.ndarray of bool or Callable
 
     Returns
     -------
     Callable
-        A function that returns the element-wise logical OR of `arg1` and `arg2` when called.
+        A function that returns the element-wise logical OR arg1, arg2, and all additional args when called.
     """
-    _a1 = arg1
-    if isinstance(arg1, np.ndarray):
-        _a1 = lambda *a, **k: arg1
-    _a2 = arg2
-    if isinstance(arg2, np.ndarray):
-        _a2 = lambda *a, **k: arg2
-    return lambda *a, **k: _a1(*a, **k) | _a2(*a, **k)
+    args = [] if args is None else args
+
+    def eval_or(*a, **k):
+        _args = [arg1, arg2] + list(args)
+        _arg_eval = None
+
+        for _arg in _args:            
+            if isinstance(_arg, np.ndarray):
+                _eval = _arg
+            else:
+                _eval = _arg(*a, **k)
+
+            if _arg_eval is None:
+                _arg_eval = _eval
+            else:                
+                if _arg_eval.shape != _eval.shape:
+                    raise ValueError(f"Shape mismatch between arguments: {_arg_eval.shape} and {_eval.shape}")
+                _arg_eval |= _eval
+
+        return _arg_eval
+
+    return eval_or
 
 @deprecated("Use logical_or() instead")
 def nfor(*args, **kwargs):
@@ -40,7 +56,7 @@ def nfor(*args, **kwargs):
     """
     return logical_or(*args, **kwargs)
 
-def logical_and(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable)):
+def logical_and(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | Callable), args:Iterable[(np.ndarray[bool] | Callable)]=None):
     """
     Create a logical AND function from two nodefilters or boolean arrays.
 
@@ -50,19 +66,31 @@ def logical_and(arg1: (np.ndarray[bool] | Callable), arg2: (np.ndarray[bool] | C
         First condition array or callable returning a boolean array.
     arg2 : np.ndarray of bool or Callable
         Second condition array or callable returning a boolean array.
-
+    args : Iterable of np.ndarray of bool or Callable    
     Returns
     -------
     Callable
-        A function that returns the element-wise logical AND of `arg1` and `arg2` when called.
+        A function that returns the element-wise logical AND of `arg1` and `arg2` and any aditional args when called.
     """
-    _a1 = arg1
-    if isinstance(arg1, np.ndarray):
-        _a1 = lambda *a, **k: arg1
-    _a2 = arg2
-    if isinstance(arg2, np.ndarray):
-        _a2 = lambda *a, **k: arg2
-    return lambda *a, **k: _a1(*a, **k) & _a2(*a, **k)
+    args = [] if args is None else args
+    def eval_and(*a, **k):
+        _args = [arg1, arg2] + list(args)
+        _arg_eval = None
+
+        for _arg in _args:            
+            if isinstance(_arg, np.ndarray):
+                _eval = _arg
+            else:
+                _eval = _arg(*a, **k)
+
+            if _arg_eval is None:
+                _arg_eval = _eval
+            else:                
+                if _arg_eval.shape != _eval.shape:
+                    raise ValueError(f"Shape mismatch between arguments: {_arg_eval.shape} and {_eval.shape}")
+                _arg_eval &= _eval
+        return _arg_eval
+    return eval_and
 
 
 @deprecated("Use logical_and() instead")

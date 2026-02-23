@@ -3,7 +3,7 @@
 **SubScript** is a Python library providing ergonomic utility functions for analyzing Galacticus semi-analytic model outputs. 
 
 **Repository:** https://github.com/cgannonucm/SubScript
-**Package:** `subhaloscript` (v1.1.2)
+**Package:** `subhaloscript` (v1.1.3)
 **Author:** Charles Gannon (cgannon@ucmerced.edu)
 
 ---
@@ -223,7 +223,7 @@ nf.subhalos_valid(gout, mass_min=1e9, mass_max=1e12)   # All filters combined
 
 ### Filter Combinations
 
-Combine filters using boolean logic:
+Combine filters using boolean logic. `logical_and()` and `logical_or()` accept an optional `args` parameter for variadic combinations:
 
 ```python
 from subscript.scripts.nfilters import logical_and, logical_or, logical_not
@@ -234,8 +234,18 @@ combined = nf.logical_and(
     nf.r3d(None, 0, 0.05)  # Passing None "freezes" arguments
 )
 
+# AND: Three or more conditions via args
+combined3 = nf.logical_and(
+    nf.subhalos,
+    nf.r3d(None, 0, 0.05),
+    args=[nf.interval(None, 1e9, 1e12, key=ParamKeys.mass_bound)]
+)
+
 # OR: Either condition true
 either = nf.logical_or(filter1, filter2)
+
+# OR: Multiple conditions via args
+any_match = nf.logical_or(filter1, filter2, args=[filter3])
 
 # NOT: Invert condition
 inverted = nf.logical_not(nf.subhalos)  # Select only host halos

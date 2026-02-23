@@ -1,8 +1,8 @@
 # SubScript Function Reference
 
-Complete documentation of all functions in the SubScript library (v1.1.2), organized by module.
+Complete documentation of all functions in the SubScript library (v1.1.3), organized by module.
 
-**Last Updated:** 2026-02-20
+**Last Updated:** 2026-02-23
 **Repository:** https://github.com/cgannonucm/SubScript
 
 ---
@@ -541,36 +541,53 @@ valid_mass = nodedata(gout, ParamKeys.mass_bound, nfilter=valid_filter)
 **Signature:**
 ```python
 def logical_and(arg1: (np.ndarray[bool] | Callable),
-                arg2: (np.ndarray[bool] | Callable)) → Callable
+                arg2: (np.ndarray[bool] | Callable),
+                args: Iterable[(np.ndarray[bool] | Callable)] = None) → Callable
 ```
 
-**Description:** Create logical AND of two filters or boolean arrays.
+**Description:** Create logical AND of two or more filters or boolean arrays. Supports variadic additional arguments via the `args` parameter.
+
+**Parameters:**
+- `arg1` (np.ndarray[bool] | Callable): First condition
+- `arg2` (np.ndarray[bool] | Callable): Second condition
+- `args` (Iterable, optional): Additional conditions to AND together
 
 ```python
-from subscript.scripts.nfilters import logical_and, subhalos, r3d
+from subscript.scripts.nfilters import logical_and, subhalos, r3d, interval
 
-# Combine filters
+# Combine two filters
 inner_subhalos = logical_and(subhalos, r3d(None, 0, 0.1))
 mass = nodedata(gout, ParamKeys.mass_bound, nfilter=inner_subhalos)
 
-# Combine arrays
-array_and = logical_and(bool_array1, bool_array2)
+# Combine three or more filters via args
+combined = logical_and(
+    subhalos,
+    r3d(None, 0, 0.1),
+    args=[interval(None, 1e9, 1e12, key=ParamKeys.mass_bound)]
+)
 ```
 
 **Notes:**
 - Works with both callables (filters) and arrays
 - Returns callable that can be used as `nfilter`
-- Implements: `arg1(...) & arg2(...)`
+- Raises `ValueError` if argument shapes mismatch
+- Implements: `arg1(...) & arg2(...) & args[0](...) & ...`
 
 #### logical_or()
 
 **Signature:**
 ```python
 def logical_or(arg1: (np.ndarray[bool] | Callable),
-               arg2: (np.ndarray[bool] | Callable)) → Callable
+               arg2: (np.ndarray[bool] | Callable),
+               args: Iterable[(np.ndarray[bool] | Callable)] = None) → Callable
 ```
 
-**Description:** Create logical OR of two filters or boolean arrays.
+**Description:** Create logical OR of two or more filters or boolean arrays. Supports variadic additional arguments via the `args` parameter.
+
+**Parameters:**
+- `arg1` (np.ndarray[bool] | Callable): First condition
+- `arg2` (np.ndarray[bool] | Callable): Second condition
+- `args` (Iterable, optional): Additional conditions to OR together
 
 ```python
 # Nodes either in inner region OR above mass threshold
@@ -578,7 +595,19 @@ inner_or_massive = logical_or(
     r3d(None, 0, 0.05),
     interval(None, 1e11, np.inf, key=ParamKeys.mass_bound)
 )
+
+# Three or more conditions
+any_match = logical_or(
+    filter1,
+    filter2,
+    args=[filter3, filter4]
+)
 ```
+
+**Notes:**
+- Works with both callables (filters) and arrays
+- Returns callable that can be used as `nfilter`
+- Raises `ValueError` if argument shapes mismatch
 
 #### logical_not()
 

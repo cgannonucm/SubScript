@@ -282,7 +282,7 @@ class Meta():
     """
 
     disableDepreciatedWarning = False
-    """If true, disable the warning about depreciated code."""
+    """If true, disable the warning about deprecated code."""
 
     units_enable = False
     """If true, use astropy units when reading data."""

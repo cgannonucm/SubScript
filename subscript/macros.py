@@ -1,4 +1,39 @@
 #!/usr/bin/env python
+"""
+Batch macro framework for running analysis functions across many Galacticus files.
+
+A *macro* is a SubScript analysis function (typically decorated with
+:func:`~subscript.wrappers.gscript`) that has been partially applied with
+fixed keyword arguments via :func:`~subscript.wrappers.freeze`.  This module
+provides tools to:
+
+1. **Build** a macro dictionary with :func:`macro_add`.
+2. **Execute** all macros against a collection of Galacticus HDF5 files with
+   :func:`macro_run`.
+3. **Persist** the results to an HDF5 file with :func:`macro_write_out_hdf5`.
+
+The module also exposes lower-level helpers (:func:`macro_run_file`,
+:func:`macro_runner_def`, :func:`macro_gen_runner`) that are used internally
+and can be replaced with custom implementations when needed.
+
+Typical usage
+-------------
+::
+
+    import numpy as np
+    import subscript.scripts.nfilters as nf
+    from subscript.scripts.histograms import massfunction
+    from subscript.macros import macro_add, macro_run, macro_write_out_hdf5
+
+    macros = {}
+    macros = macro_add(macros, massfunction, label="massfunction",
+                       nfilter=nf.subhalos, bins=np.logspace(9, 13, 30))
+
+    results = macro_run(macros, list_of_hdf5_files, statfuncs=[np.mean, np.std])
+
+    with h5py.File("results.hdf5", "w") as f:
+        macro_write_out_hdf5(f, results, notes="My analysis run")
+"""
 from typing import Iterable, Callable
 import numpy as np
 import h5py

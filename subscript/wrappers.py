@@ -1,4 +1,39 @@
 #!/usr/bin/env python
+"""
+Decorator-based framework for writing reusable Galacticus analysis functions.
+
+The two public decorators in this module — :func:`gscript` and
+:func:`gscript_proj` — are the core abstraction of SubScript.  Wrapping an
+analysis function with ``@gscript`` gives it the following capabilities
+automatically:
+
+* **Input normalisation** – accepts an :class:`h5py.File`, a plain
+  :class:`dict`, a :class:`~subscript.tabulatehdf5.NodeProperties` object, or
+  any iterable of the above.
+* **Per-tree iteration** – the wrapped function is called once per merger tree
+  and results are collected into a list.
+* **Node filtering** – an optional ``nfilter`` keyword applies a boolean mask
+  (or callable filter) before the function receives the data.
+* **Statistical summarisation** – pass ``summarize=True`` and
+  ``statfuncs=[np.mean, np.std]`` to reduce per-tree results into ensemble
+  statistics in a single call.
+
+:func:`gscript_proj` extends ``@gscript`` for projection-based analyses that
+accept one or more line-of-sight normal vectors, treating each vector as an
+independent tree realisation.
+
+Helper utilities
+----------------
+:func:`freeze`
+    Partially apply keyword arguments to a wrapped function.
+:func:`multiproj`
+    Combine :func:`gscript_proj` with a fixed node filter.
+:func:`format_nodedata`
+    Convert heterogeneous Galacticus-like inputs into a uniform list of
+    :class:`~subscript.tabulatehdf5.NodeProperties` objects.
+:func:`reduce_input`
+    Recursively flatten nested lists of node-data dictionaries.
+"""
 from __future__ import annotations
 from typing import Any, Callable, Iterable, List
 from collections import UserDict

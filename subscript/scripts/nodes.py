@@ -1,4 +1,17 @@
 #!/usr/bin/env python
+"""
+Basic node data extraction functions.
+
+This module provides the two fundamental :func:`~subscript.wrappers.gscript`-
+wrapped helpers for reading raw values from Galacticus node data:
+
+- :func:`nodedata`  – extract one or more named properties from a tree.
+- :func:`nodecount` – count the number of nodes passing the active filter.
+
+Both functions accept the standard ``nfilter``, ``summarize``, and
+``statfuncs`` keyword arguments provided by the
+:func:`~subscript.wrappers.gscript` decorator.
+"""
 import numpy as np
 from typing import Iterable
 from subscript.wrappers import gscript

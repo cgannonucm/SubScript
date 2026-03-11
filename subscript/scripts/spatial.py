@@ -1,4 +1,25 @@
 #!/usr/bin/env python
+"""
+Spatial projection functions for computing node distances and projections.
+
+This module provides :func:`~subscript.wrappers.gscript`-wrapped helpers for
+computing radial distances and projected separations from Galacticus node
+position data.
+
+Functions
+---------
+:func:`project3d`
+    3-D Euclidean distance of each node from the coordinate origin.
+:func:`project2d`
+    2-D projected distance from the origin onto the plane orthogonal to a
+    given line-of-sight normal vector.
+
+Both functions read coordinates via the :class:`~subscript.defaults.ParamKeys`
+constants ``x``, ``y``, and ``z`` by default, but alternative key names can
+be supplied.  :func:`project2d` is decorated with
+:func:`~subscript.wrappers.gscript_proj` and therefore accepts multiple
+``normvector`` arrays (each treated as a separate tree realisation).
+"""
 import numpy as np
 import numpy.testing
 import h5py

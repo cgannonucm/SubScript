@@ -87,7 +87,7 @@ UNITS_IN_SI = {
     ParamKeys.satellite_velocity_y: apu.m / apu.s,
     ParamKeys.satellite_velocity_z: apu.m / apu.s,
     ParamKeys.satellite_tidal_field: 1 / apu.s**2,
-    ParamKeys.satellite_tidal_heating_normalized: apu.kg / apu.s**2,
+    ParamKeys.satellite_tidal_heating_normalized: 1 / apu.s**2,
     ParamKeys.sibling_index: apu.dimensionless_unscaled,
     ParamKeys.spin_angular_momentum: apu.dimensionless_unscaled,
     ParamKeys.spin_angular_momentum_vector_x: apu.dimensionless_unscaled,

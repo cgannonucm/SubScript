@@ -13,14 +13,14 @@ from subscript.scripts import nfilters as nf
 from subscript.tracking import track_subhalos, track_subhalo
 
 
-def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=False) -> dict:
+def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=False, include_isolated=False) -> dict:
     """
     Extract per-subhalo time-series data for all subhalos in a Galacticus tree.
 
     Retrieves all subhalo node IDs at the last snapshot of the given tree, runs
     track_subhalos across all snapshots, then filters each subhalo's time-series
-    via track_subhalo (removing isolated). Results are cached
-    to disk using pickle.
+    via track_subhalo (removing isolated unless include_isolated is True). Results
+    are cached to disk using pickle.
 
     Parameters
     ----------
@@ -30,6 +30,9 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
         Index of the merger tree to process.
     refresh : bool, optional
         If True, bypass cache and recompute results. Default is False.
+    include_isolated : bool, optional
+        If True, include all snapshots regardless of isolation status (only
+        unbound mass is still filtered out). Default is False.
 
     Returns
     -------
@@ -40,10 +43,11 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
     """
     file_path = galacticus_hdf5.filename
 
-    # Build cache filename: {stem}-{hash[:16]}-tree{tree_index}.pkl
+    # Build cache filename: {stem}-{hash[:16]}-tree{tree_index}[-isolated].pkl
     file_stem = Path(file_path).stem
     file_hash = hashlib.sha256(open(file_path, 'rb').read()).hexdigest()[:16]
-    cache_path_name = f"{file_stem}-{file_hash}-tree{tree_index}.pkl"
+    isolated_tag = "-isolated" if include_isolated else ""
+    cache_path_name = f"{file_stem}-{file_hash}-tree{tree_index}{isolated_tag}.pkl"
     cache_path = os.path.join(Path(file_path).parent, cache_path_name)
 
     if os.path.exists(cache_path) and not refresh:
@@ -69,7 +73,8 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
     result = {}
     for node_id in node_ids:
         filtered_data, filtered_zsnaps = track_subhalo(
-            dat_subhalos, zsnap_subhalos, node_id, param_keys
+            dat_subhalos, zsnap_subhalos, node_id, param_keys,
+            include_isolated=include_isolated
         )
         result[node_id] = {'data': filtered_data, 'zsnaps': filtered_zsnaps}
 

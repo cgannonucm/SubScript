@@ -1,8 +1,8 @@
 # SubScript Function Reference
 
-Complete documentation of all functions in the SubScript library (v1.1.4), organized by module.
+Complete documentation of all functions in the SubScript library (v1.1.7), organized by module.
 
-**Last Updated:** 2026-02-23
+**Last Updated:** 2026-03-18
 **Repository:** https://github.com/cgannonucm/SubScript
 
 ---
@@ -1284,16 +1284,18 @@ gout.close()
 **Signature:**
 ```python
 def track_subhalo(subhalos_over_time: dict, zsnaps: np.ndarray,
-                  nodeindex: int, param_keys: list[str]) → tuple
+                  nodeindex: int, param_keys: list[str],
+                  include_isolated: bool = False) → tuple
 ```
 
-**Description:** Filter a single subhalo's time-series to retain only satellite phase snapshots.
+**Description:** Filter a single subhalo's time-series to retain only bound snapshots, optionally including isolated (host halo) snapshots.
 
 **Parameters:**
 - `subhalos_over_time` (dict): Output from `track_subhalos()`
 - `zsnaps` (np.ndarray): Snapshot redshifts from `track_subhalos()`
 - `nodeindex` (int): Node ID to extract
 - `param_keys` (list[str]): Parameters to include in output
+- `include_isolated` (bool, optional): If True, include all snapshots regardless of isolation status (only unbound mass is still filtered out). Default is False.
 
 **Returns:**
 - tuple: (filtered_data, filtered_zsnaps)
@@ -1301,8 +1303,9 @@ def track_subhalo(subhalos_over_time: dict, zsnaps: np.ndarray,
   - `filtered_zsnaps` (np.ndarray): Filtered redshifts
 
 **Filtering Criteria:**
-- Removes snapshots where `is_isolated == 1` (host halo)
-- Removes snapshots where `mass_bound ≤ 0` (unbound)
+- Always removes snapshots where `mass_bound ≤ 0` (unbound)
+- When `include_isolated=False` (default): also removes snapshots where `is_isolated == 1` (host halo)
+- When `include_isolated=True`: keeps all snapshots with positive bound mass
 
 **Example:**
 ```python
@@ -1313,11 +1316,18 @@ import matplotlib.pyplot as plt
 ts_data, zsnaps = track_subhalos(gout, node_ids, treeIndex=0,
                                  param_keys=[ParamKeys.mass_bound, ParamKeys.is_isolated])
 
-# Filter to satellite phase only
+# Filter to satellite phase only (default)
 node_id = node_ids[0]
 data_sat, z_sat = track_subhalo(
     ts_data, zsnaps, node_id,
     [ParamKeys.mass_bound]
+)
+
+# Include isolated snapshots (full history)
+data_all, z_all = track_subhalo(
+    ts_data, zsnaps, node_id,
+    [ParamKeys.mass_bound],
+    include_isolated=True
 )
 
 # Plot mass evolution in satellite phase
@@ -1329,7 +1339,8 @@ plt.show()
 
 **Notes:**
 - Automatically requires `is_isolated` and `mass_bound` in tracking data
-- Removes early snapshots before infall and late unbound snapshots
+- With `include_isolated=False`: removes early snapshots before infall and late unbound snapshots
+- With `include_isolated=True`: retains pre-infall history, useful for studying full mass evolution
 - Useful for studying tidal stripping history
 
 ---
@@ -1341,25 +1352,27 @@ plt.show()
 **Signature:**
 ```python
 def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int,
-                       refresh: bool = False) -> dict
+                       refresh: bool = False, include_isolated: bool = False) -> dict
 ```
 
 **Description:**
-Convenience wrapper that extracts per-subhalo time-series data for **all** subhalos in a given merger tree and caches the result to disk. On subsequent calls with the same file and tree, the cached result is returned immediately unless `refresh=True`.
+Convenience wrapper that extracts per-subhalo time-series data for **all** subhalos in a given merger tree and caches the result to disk. On subsequent calls with the same file and tree, the cached result is returned immediately unless `refresh=True`. When `include_isolated=True`, isolated (host halo) snapshots are retained in the time-series.
 
 **Parameters:**
 - `galacticus_hdf5` (h5py.File): Open Galacticus HDF5 output file
 - `tree_index` (int): Index of the merger tree to process
 - `refresh` (bool, optional): If True, bypass cache and recompute. Default is False.
+- `include_isolated` (bool, optional): If True, include all snapshots regardless of isolation status (only unbound mass is still filtered out). Default is False.
 
 **Returns:**
 - dict: `{node_id (int): {'data': {param_key: np.ndarray}, 'zsnaps': np.ndarray}}`
-  - `data`: per-parameter time-series arrays filtered to satellite-only snapshots
+  - `data`: per-parameter time-series arrays filtered to bound snapshots (and non-isolated unless `include_isolated=True`)
   - `zsnaps`: corresponding redshift array
 
 **Cache Behaviour:**
 - Cache file written to the same directory as the HDF5 file
-- Filename pattern: `{stem}-{sha256[:16]}-tree{tree_index}.pkl`
+- Filename pattern: `{stem}-{sha256[:16]}-tree{tree_index}.pkl` (default)
+- When `include_isolated=True`: `{stem}-{sha256[:16]}-tree{tree_index}-isolated.pkl`
 - Cache is invalidated automatically when the file content changes (hash-based)
 
 **Requirements:**
@@ -1377,6 +1390,9 @@ gout = h5py.File('galacticus.hdf5')
 # Load (or compute and cache) all subhalo time-series for tree 0
 result = subhalo_timeseries(gout, tree_index=0)
 
+# Include isolated snapshots for full history
+result_full = subhalo_timeseries(gout, tree_index=0, include_isolated=True)
+
 # Force recompute
 result = subhalo_timeseries(gout, tree_index=0, refresh=True)
 
@@ -1393,7 +1409,8 @@ gout.close()
 
 **Notes:**
 - Internally calls `track_subhalos()` then `track_subhalo()` for each node
-- Snapshots where the subhalo is a host halo or has `mass_bound ≤ 0` are removed
+- By default, snapshots where the subhalo is a host halo or has `mass_bound ≤ 0` are removed
+- With `include_isolated=True`, only `mass_bound ≤ 0` snapshots are removed — useful for studying full mass evolution including pre-infall history
 - For large simulations the initial computation can be slow; cache makes reruns instant
 
 ---

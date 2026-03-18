@@ -56,8 +56,8 @@ def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
                         
     return subhalo_data, zsnaps
  
-def track_subhalo(subhalos_over_time, zsnaps, nodeindex, param_keys):
-    """Filter subhalo time-series data to retain only non-isolated, bound snapshots. 
+def track_subhalo(subhalos_over_time, zsnaps, nodeindex, param_keys, include_isolated=False):
+    """Filter subhalo time-series data to retain only bound snapshots.
     Parameters
     ----------
     subhalos_over_time : dict
@@ -68,14 +68,20 @@ def track_subhalo(subhalos_over_time, zsnaps, nodeindex, param_keys):
         Node index of the subhalo to filter
     param_keys : list of str
         List of parameter keys to include in filtered output
-    
+    include_isolated : bool, optional
+        If True, include all snapshots regardless of isolation status. Only
+        unbound mass is still filtered out. Default is False.
+
     Returns
     -------
     filtered_data : dict
         Dictionary with structure {param_key: filtered_time_series_array} where filtering removes
-        snapshots where the subhalo is isolated (is_isolated == 1) or has no bound mass (mass_bound <= 0)
+        snapshots where the subhalo has no bound mass (mass_bound <= 0), and optionally where
+        the subhalo is isolated (is_isolated == 1) when include_isolated is False.
     filtered_zsnaps : ndarray
-        Filtered array of redshifts corresponding to non-isolated, bound snapshots
+        Filtered array of redshifts corresponding to retained snapshots
     """
-    _filter = (subhalos_over_time[nodeindex][ParamKeys.is_isolated] == 0) & (subhalos_over_time[nodeindex][ParamKeys.mass_bound] > 0)
+    _filter = subhalos_over_time[nodeindex][ParamKeys.mass_bound] > 0
+    if not include_isolated:
+        _filter = _filter & (subhalos_over_time[nodeindex][ParamKeys.is_isolated] == 0)
     return {key: subhalos_over_time[nodeindex][key][_filter] for key in param_keys}, zsnaps[_filter]

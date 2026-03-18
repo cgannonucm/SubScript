@@ -3,7 +3,7 @@
 **SubScript** is a Python library providing ergonomic utility functions for analyzing Galacticus semi-analytic model outputs. 
 
 **Repository:** https://github.com/cgannonucm/SubScript
-**Package:** `subhaloscript` (v1.1.5)
+**Package:** `subhaloscript` (v1.1.6)
 **Author:** Charles Gannon (cgannon@ucmerced.edu)
 
 > **Note:** Refer to SubScript as a "library" (preferred), "package", or "toolkit" — never as an "API".
@@ -566,7 +566,7 @@ subhalo_data, zsnaps = track_subhalos(
 # zsnaps -> redshifts for each snapshot (averaged over host halos)
 ```
 
-### track_subhalo() - Filter to Satellite-Only Snapshots
+### track_subhalo() - Filter to Bound Snapshots
 
 ```python
 from subscript.tracking import track_subhalo
@@ -581,8 +581,15 @@ filtered_data, filtered_zsnaps = track_subhalo(
 )
 
 # Removes snapshots where:
-# - is_isolated == 1 (host halo)
+# - is_isolated == 1 (host halo) — unless include_isolated=True
 # - mass_bound <= 0 (unbound)
+
+# Include isolated snapshots for full history (pre-infall + satellite)
+data_all, z_all = track_subhalo(
+    subhalo_data, zsnaps, node_id,
+    param_keys=[ParamKeys.mass_bound],
+    include_isolated=True
+)
 
 # Now can plot evolution
 import matplotlib.pyplot as plt
@@ -600,6 +607,9 @@ from subscript.subhalo_timeseries import subhalo_timeseries
 
 # Extract (or load from cache) all subhalo time-series for tree 0
 result = subhalo_timeseries(gout, tree_index=0)
+
+# Include isolated snapshots for full history (pre-infall + satellite)
+result_full = subhalo_timeseries(gout, tree_index=0, include_isolated=True)
 
 # Force recompute, ignoring cache
 result = subhalo_timeseries(gout, tree_index=0, refresh=True)
@@ -622,7 +632,8 @@ plt.show()
 
 **Cache behaviour:**
 - Cache file is written to the same directory as the HDF5 file
-- Filename: `{stem}-{sha256[:16]}-tree{tree_index}.pkl`
+- Filename: `{stem}-{sha256[:16]}-tree{tree_index}.pkl` (default)
+- With `include_isolated=True`: `{stem}-{sha256[:16]}-tree{tree_index}-isolated.pkl`
 - Cache is invalidated automatically when the file content changes (hash-based)
 - Pass `refresh=True` to force recomputation
 

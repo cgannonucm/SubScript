@@ -4,6 +4,25 @@ from subscript.tabulatehdf5 import get_galacticus_outputs, tabulate_trees
 from subscript.scripts.nodes import nodedata
 from subscript.defaults import ParamKeys
 
+def _tree_order(galacticus_out, isnap):
+    """Physical ``mergerTreeIndex`` id sitting at each positional tree block of output ``isnap``.
+
+    Galacticus writes the per-output tree blocks in an order that can permute
+    from output to output, so a positional block index does NOT correspond to a
+    fixed physical tree across snapshots. This returns the physical tree id at
+    each block position for a single output, so callers can resolve a positional
+    index to a snapshot-stable physical id.
+    """
+    return np.asarray(galacticus_out["Outputs"][f"Output{int(isnap)}"]["mergerTreeIndex"][:])
+
+def _tree_position(galacticus_out, isnap, phys_tree):
+    """Positional block index of physical tree ``phys_tree`` at output ``isnap``.
+
+    Returns ``None`` if that physical tree has no block at this output.
+    """
+    pos = np.flatnonzero(_tree_order(galacticus_out, isnap) == phys_tree)
+    return int(pos[0]) if pos.size else None
+
 def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
     """Extract time-series data for specified subhalo nodes across all Galacticus snapshots.
     NOTE: To use this function, galacticus must be run with the nodeOperator indexShift.
@@ -20,7 +39,10 @@ def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
     nodeIndices : array-like
         Array of node indices for subhalos to track
     treeIndex : int
-        Index of the merger tree to extract data from
+        Positional index of the merger tree in the latest output's tree list.
+        This is resolved once to a physical ``mergerTreeIndex`` id, which is
+        stable across snapshots, and that physical id is used to select the tree
+        block at every output (see Notes).
     param_keys : list of str, optional
         List of parameter keys to extract for each subhalo. If None, extracts all available keys
         from the tree at the first snapshot
@@ -31,8 +53,24 @@ def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
         Nested dictionary with structure {node_id: {param_key: time_series_array, 'zsnap': redshift_array}}
     zsnaps : ndarray
         Array of redshifts at each snapshot (averaged over host halos)
+
+    Notes
+    -----
+    Nodes are followed by physical tree id, NOT by positional block index.
+    Galacticus can permute the per-output tree block order, and ``nodeIndex`` is
+    only unique *within* a tree (``indexShift`` keeps an index stable across
+    outputs but the same integer is reused across trees). Selecting a fixed
+    positional block index therefore follows different physical trees across
+    outputs and, via the shared ``nodeIndex``, splices unrelated halos into one
+    time series. Resolving ``treeIndex`` to a physical ``mergerTreeIndex`` id and
+    selecting by that id at every output removes the splice.
     """
     snaps = np.flip(np.asarray(get_galacticus_outputs(galacticus_out)))
+
+    # Resolve the caller's positional treeIndex (into the latest output's tree
+    # list) to a physical mergerTreeIndex id, then select by that id at every
+    # output so a permuting block order can't swap in a different physical tree.
+    phys_tree = int(_tree_order(galacticus_out, snaps[0])[treeIndex])
 
     param_keys = param_keys if param_keys is not None else [_key for _key in tabulate_trees(galacticus_out, snaps[0])[treeIndex].keys()]
 
@@ -41,8 +79,12 @@ def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
     zsnaps = np.zeros(len(snaps))
 
     for j, isnap in enumerate(snaps):
-        snap = tabulate_trees(galacticus_out, isnap)[treeIndex]  
-        nd = nodedata(snap, key=param_keys)    
+        pos = _tree_position(galacticus_out, isnap, phys_tree)
+        if pos is None:
+            continue  # physical tree absent at this output; leave zeros (filtered downstream)
+
+        snap = tabulate_trees(galacticus_out, isnap)[pos]
+        nd = nodedata(snap, key=param_keys)
 
         ids = nodedata(snap, 'nodeIndex')
 
@@ -50,10 +92,10 @@ def track_subhalos(galacticus_out, nodeIndices, treeIndex,  param_keys = None):
 
         for n, id in enumerate(ids):
             if id not in nodeIndices:
-                continue 
+                continue
             for i, key in enumerate(param_keys):
                 subhalo_data[id][key][j] = nd[i][n]
-                        
+
     return subhalo_data, zsnaps
  
 def track_subhalo(subhalos_over_time, zsnaps, nodeindex, param_keys, include_isolated=False):

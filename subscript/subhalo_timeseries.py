@@ -3,6 +3,7 @@ import os
 import pickle
 import hashlib
 from pathlib import Path
+from importlib.metadata import version, PackageNotFoundError
 
 import h5py
 import numpy as np
@@ -13,6 +14,21 @@ from subscript.scripts import nfilters as nf
 from subscript.tracking import track_subhalos, track_subhalo
 
 
+def _subscript_version():
+    """Installed subscript (subhaloscript) version string used to stamp caches.
+
+    Reflects the *installed* package metadata, which is the correct notion of
+    "the subscript that produced a cache". For an editable install this is
+    frozen at install time and only refreshes on reinstall. Returns 'unknown'
+    if the package is not installed via metadata, in which case it never matches
+    a stamped version and caches are always regenerated (safe).
+    """
+    try:
+        return version('subhaloscript')
+    except PackageNotFoundError:
+        return 'unknown'
+
+
 def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=False, include_isolated=False) -> dict:
     """
     Extract per-subhalo time-series data for all subhalos in a Galacticus tree.
@@ -20,7 +36,9 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
     Retrieves all subhalo node IDs at the last snapshot of the given tree, runs
     track_subhalos across all snapshots, then filters each subhalo's time-series
     via track_subhalo (removing isolated unless include_isolated is True). Results
-    are cached to disk using pickle.
+    are cached to disk using pickle. Each cache is stamped with the subscript
+    version that produced it and is transparently regenerated when the installed
+    subscript version changes (or when an older, unversioned cache is found).
 
     Parameters
     ----------
@@ -52,7 +70,14 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
 
     if os.path.exists(cache_path) and not refresh:
         with open(cache_path, 'rb') as f:
-            return pickle.load(f)
+            cached = pickle.load(f)
+        # Reuse only if the cache was produced by the current subscript version.
+        # Older, unversioned caches are raw dicts keyed by int node_id, so the
+        # string-key lookup returns None (no collision) -> treated as stale.
+        if isinstance(cached, dict) and cached.get('subscript_version') == _subscript_version():
+            return cached['result']
+        # stale (version mismatch or old unversioned format): fall through,
+        # recompute, and overwrite cache_path below.
 
     # Get all subhalo node IDs at the last output of this tree
     trees = tabulate_trees(galacticus_hdf5)
@@ -79,6 +104,6 @@ def subhalo_timeseries(galacticus_hdf5: h5py.File, tree_index: int, refresh=Fals
         result[node_id] = {'data': filtered_data, 'zsnaps': filtered_zsnaps}
 
     with open(cache_path, 'wb') as f:
-        pickle.dump(result, f)
+        pickle.dump({'subscript_version': _subscript_version(), 'result': result}, f)
 
     return result

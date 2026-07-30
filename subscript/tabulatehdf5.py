@@ -1,4 +1,31 @@
 #!/usr/bin/env python
+"""
+Core HDF5 loading and node-data tabulation for Galacticus output files.
+
+This module provides the primary data-access layer for SubScript.  Given an
+open :class:`h5py.File` pointing at a Galacticus simulation output, the
+functions here parse the ``Outputs/OutputN/nodeData`` group structure and
+return per-tree :class:`NodeProperties` objects that the rest of the library
+operates on.
+
+Key objects
+-----------
+:class:`NodeProperties`
+    Dictionary-like wrapper around a merger tree's node data.  Supports lazy
+    loading from HDF5 datasets, optional node filtering, and automatic astropy
+    unit conversion.
+
+:func:`get_galacticus_outputs`
+    List the available output snapshot indices in a Galacticus HDF5 file.
+
+:func:`get_custom_dsets`
+    Generate SubScript-specific synthetic datasets (tree index, node ID, …)
+    that complement the native Galacticus datasets.
+
+:func:`tabulate_trees`
+    Load all merger trees from a chosen output snapshot and return them as a
+    list of :class:`NodeProperties` objects.
+"""
 import h5py
 from typing import Callable, Iterable
 import numpy as np

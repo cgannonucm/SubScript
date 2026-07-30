@@ -1,4 +1,44 @@
 #!/usr/bin/env python
+"""
+Node filtering functions for selecting subsets of Galacticus nodes.
+
+This module provides a library of *node filter* callables that can be passed
+as the ``nfilter`` keyword argument to any :func:`~subscript.wrappers.gscript`-
+decorated function.  A node filter accepts a
+:class:`~subscript.tabulatehdf5.NodeProperties` object and returns a boolean
+:class:`numpy.ndarray` mask with one entry per node.
+
+Filters can be combined using the boolean-logic combinators:
+
+- :func:`logical_and` – element-wise AND of two or more filters.
+- :func:`logical_or`  – element-wise OR  of two or more filters.
+- :func:`logical_not` – element-wise NOT of a filter.
+
+Spatial filters
+---------------
+- :func:`r3d`      – 3-D Euclidean radial interval.
+- :func:`r2d`      – 2-D projected radial interval.
+- :func:`withinrv` – within the virial radius of the most massive progenitor.
+
+Topology filters
+----------------
+- :func:`allnodes`   – pass all nodes (identity mask).
+- :func:`hosthalos`  – isolated (host) halos only.
+- :func:`subhalos`   – non-isolated (satellite) halos only.
+- :func:`most_massive_progenitor` – single most massive node.
+- :func:`subhalos_valid`          – subhalos inside the virial radius and
+  within a given mass range.
+
+Value-range filter
+------------------
+- :func:`interval` – nodes whose property value falls within ``[min, max)``.
+
+Deprecated aliases
+------------------
+All functions have deprecated aliases with ``nfilter_`` / ``nf`` prefixes
+(e.g. :func:`nfilter_halos`, :func:`nfand`) that issue a
+:class:`DeprecationWarning` and delegate to the current names.
+"""
 import numpy as np
 import numpy.testing
 import h5py

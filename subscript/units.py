@@ -1,3 +1,41 @@
+"""
+Astropy unit integration for Galacticus node properties.
+
+This module provides functions to configure optional astropy unit support for
+the SubScript library.  When units are enabled, every node property returned
+by :class:`~subscript.tabulatehdf5.NodeProperties` is an
+:class:`astropy.units.Quantity` decomposed in the configured base-unit system
+(default: ``[M☉, Mpc, Myr]``).
+
+Typical usage
+-------------
+Enable units from a Galacticus HDF5 file (reads ``unitsInSI`` attributes)::
+
+    from subscript.units import enableUnitsFromGalacticus
+    enableUnitsFromGalacticus(gal_out)
+
+Or supply conversion factors manually::
+
+    from subscript.units import enableUnits, UNITS_IN_SI
+    from subscript.tabulatehdf5 import galacticus_units_si
+    enableUnits(galacticus_units_si(gal_out), UNITS_IN_SI)
+
+Public API
+----------
+:data:`UNITS_IN_SI`
+    Dictionary mapping :class:`~subscript.defaults.ParamKeys` string keys to
+    their SI :mod:`astropy.units` unit objects.
+
+:func:`galacticus_units_si`
+    Extract per-dataset SI conversion factors from a Galacticus HDF5 file.
+
+:func:`enableUnits`
+    Configure the global unit state directly.
+
+:func:`enableUnitsFromGalacticus`
+    Convenience wrapper that reads conversion factors from an HDF5 file then
+    calls :func:`enableUnits`.
+"""
 import csv
 
 import h5py

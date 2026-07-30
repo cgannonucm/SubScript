@@ -1,4 +1,35 @@
 #!/usr/bin/env python
+"""
+Histogram and number-density functions for Galacticus node data.
+
+This module provides :func:`~subscript.wrappers.gscript`-wrapped functions
+that compute various histograms and number-density distributions from
+Galacticus merger-tree output.
+
+Functions
+---------
+:func:`bin_avg`
+    Compute bin-centre values from an array of bin edges.
+:func:`bin_size`
+    Compute bin widths from an array of bin edges.
+:func:`hist`
+    Generic histogram of any node property.
+:func:`massfunction`
+    Halo/subhalo mass function (dn/dM per mass bin).
+:func:`spatial3d_dn`
+    3-D radial number count distribution (dn).
+:func:`spatial3d_dndv`
+    3-D radial number density per unit volume (dn/dV).
+:func:`spatial2d_dn`
+    2-D projected radial number count distribution.
+:func:`spatial2d_dnda`
+    2-D projected number density per unit area (dn/dA).
+
+All ``@gscript``-decorated functions accept the standard ``nfilter``,
+``summarize``, and ``statfuncs`` keyword arguments for node filtering and
+ensemble statistics.  The ``@gscript_proj``-decorated projection functions
+additionally accept one or more line-of-sight ``normvector`` arguments.
+"""
 import numpy as np
 from subscript.wrappers import gscript, gscript_proj
 from subscript.defaults import ParamKeys

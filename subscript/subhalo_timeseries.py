@@ -1,4 +1,23 @@
 #!/usr/bin/env python3
+"""
+High-level helper for extracting and caching per-subhalo time-series data.
+
+This module provides :func:`subhalo_timeseries`, a convenience wrapper around
+:func:`~subscript.tracking.track_subhalos` and
+:func:`~subscript.tracking.track_subhalo` that:
+
+* Retrieves all subhalo node IDs at the last snapshot of a given merger tree.
+* Tracks those subhalos across every available Galacticus snapshot.
+* Filters each subhalo's history to satellite-only epochs (removing snapshots
+  where the halo is isolated or has zero bound mass).
+* Caches results to a ``.pkl`` file alongside the input HDF5 file so that
+  repeated calls are fast.
+
+.. note::
+   Galacticus must be run with ``<nodeOperator value="indexShift" />`` for
+   node indices to remain stable across snapshots (required by the underlying
+   :func:`~subscript.tracking.track_subhalos` function).
+"""
 import os
 import pickle
 import hashlib

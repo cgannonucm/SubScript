@@ -1,3 +1,28 @@
+"""
+Subhalo time-series tracking across Galacticus output snapshots.
+
+This module provides functions to extract the evolution history of individual
+subhalos over cosmic time by reading every output snapshot stored in a
+Galacticus HDF5 file.
+
+.. note::
+   To use :func:`track_subhalos`, Galacticus must be run with the
+   ``nodeOperator`` set to ``indexShift`` so that node indices remain
+   consistent across snapshots::
+
+       <nodeOperator value="indexShift" />
+
+Functions
+---------
+:func:`track_subhalos`
+    Extract time-series data for a set of subhalo node indices across all
+    snapshots of a single merger tree.
+
+:func:`track_subhalo`
+    Filter the per-subhalo time-series returned by :func:`track_subhalos` to
+    retain only the snapshots where the subhalo is a bound satellite (not
+    isolated and with positive bound mass).
+"""
 import numpy as np
 import subscript.scripts.nfilters as nf
 from subscript.tabulatehdf5 import get_galacticus_outputs, tabulate_trees
